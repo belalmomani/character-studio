@@ -1,0 +1,10 @@
+*.jks
+*.keystore
+local.properties
+.gradle/
+build/
+.idea/
+*.iml
+.env
+.env.*
+supabase/.temp/
