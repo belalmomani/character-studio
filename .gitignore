@@ -1,11 +1,17 @@
-*.jks
-*.keystore
-!app/debug.keystore
-local.properties
+*.iml
 .gradle/
 build/
+local.properties
 .idea/
-*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Secrets and signing material: never commit
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+google-services.json
 .env
-.env.*
-supabase/.temp/
