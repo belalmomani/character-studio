@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة إدارة استوديو الشخصيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f5f4; --surface:#ffffff; --ink:#18232b; --muted:#5b6872; --line:#d9dfdd;
+    --primary:#0e6b66; --primary-ink:#ffffff; --danger:#b42318; --warn:#9a5b00; --ok:#1b6e3c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#10181c; --surface:#18242a; --ink:#e8eeee; --muted:#9db0b4; --line:#2b3b42;
+      --primary:#4cc2b9; --primary-ink:#06211f; --danger:#ff8a7a; --warn:#f0b35a; --ok:#6fd49a; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;
+    padding-top:env(safe-area-inset-top,0)}
+  main{padding:16px 16px 96px;max-width:640px;margin:0 auto}
+  h1{font-size:1.25rem;margin:8px 0 16px}
+  h2{font-size:1.05rem;margin:0 0 8px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+  dl{margin:0}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row dt{color:var(--muted)} .row dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+  label{display:block;font-weight:600;margin:14px 0 4px}
+  input[type=email],input[type=password],input[type=number]{width:100%;font:inherit;padding:12px;border:1px solid var(--line);
+    border-radius:8px;background:var(--bg);color:var(--ink)}
+  .check{display:flex;align-items:center;gap:10px;margin:14px 0}
+  .check input{width:22px;height:22px}
+  button{font:inherit;font-weight:600;min-height:48px;padding:0 18px;border-radius:8px;border:1px solid var(--primary);
+    background:var(--primary);color:var(--primary-ink);cursor:pointer}
+  button.secondary{background:transparent;color:var(--primary)}
+  button:disabled{opacity:.55}
+  :focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+  .hint{color:var(--muted);font-size:.9rem}
+  .msg{padding:10px 12px;border-radius:8px;margin:12px 0;border:1px solid var(--line)}
+  .msg.err{color:var(--danger);border-color:var(--danger)} .msg.ok{color:var(--ok);border-color:var(--ok)}
+  .msg.warn{color:var(--warn);border-color:var(--warn)}
+  nav{position:fixed;inset:auto 0 0 0;display:flex;background:var(--surface);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom,0)}
+  nav button{flex:1;border:0;border-radius:0;background:transparent;color:var(--muted);min-height:56px}
+  nav button[aria-current=page]{color:var(--primary);box-shadow:inset 0 3px 0 var(--primary)}
+  .log{font-size:.92rem;border-bottom:1px solid var(--line);padding:10px 0}
+  .log:last-child{border-bottom:0}
+  .log small{color:var(--muted);display:block}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main id="root"><p class="hint">جارٍ التحميل…</p></main>
+<nav id="nav" hidden aria-label="التنقل">
+  <button data-tab="dashboard">المعلومات</button>
+  <button data-tab="ads">الإعلانات</button>
+  <button data-tab="audit">السجل</button>
+  <button id="logout" class="secondary">خروج</button>
+</nav>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+"use strict";
+const cfg = window.APP_CONFIG || {};
+const root = document.getElementById("root");
+const nav = document.getElementById("nav");
+let sb = null, tab = "dashboard";
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, "");
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) e.append(kid instanceof Node ? kid : document.createTextNode(kid ?? ""));
+  return e;
+}
+const msg = (text, kind) => h("div", { class: "msg " + (kind || ""), role: kind === "err" ? "alert" : "status" }, text);
+function show(...nodes) { root.replaceChildren(...nodes); }
+
+const ERRORS = {
+  forbidden: "هذا الإجراء للمسؤولين فقط.",
+  invalid_points_per_ad: "نقاط الإعلان يجب أن تكون بين 0 و1000.",
+  invalid_daily_limit: "الحد اليومي يجب أن يكون بين 0 و100 (0 = بلا حد).",
+  invalid_min_watch_seconds: "أقل زمن مشاهدة يجب أن يكون بين 5 و120 ثانية.",
+  invalid_ticket_ttl_seconds: "صلاحية التذكرة يجب أن تكون بين 60 و3600 ثانية.",
+};
+function explain(err) {
+  const t = (err && err.message) || "";
+  for (const k of Object.keys(ERRORS)) if (t.includes(k)) return ERRORS[k];
+  return "تعذّر تنفيذ العملية: " + (t || "خطأ غير معروف");
+}
+
+async function start() {
+  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
+    return show(h("h1", {}, "الإعداد غير مكتمل"),
+      msg("افتح ملف config.js وأدخل SUPABASE_URL وSUPABASE_ANON_KEY (المفتاح العام فقط).", "warn"));
+  }
+  if (!window.supabase) return show(msg("تعذّر تحميل مكتبة Supabase. تحقق من الاتصال بالإنترنت.", "err"));
+  sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  const { data } = await sb.auth.getSession();
+  if (data.session) return enter(); else return loginView();
+}
+
+function loginView(error) {
+  const email = h("input", { type: "email", id: "email", autocomplete: "username", required: true });
+  const pass = h("input", { type: "password", id: "pass", autocomplete: "current-password", required: true });
+  const btn = h("button", { type: "submit" }, "تسجيل الدخول");
+  const box = h("div");
+  const form = h("form", { class: "panel", onsubmit: async (ev) => {
+    ev.preventDefault(); btn.disabled = true;
+    const { error: e } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pass.value });
+    btn.disabled = false;
+    if (e) { box.replaceChildren(msg("تعذّر تسجيل الدخول. تحقق من البريد وكلمة المرور.", "err")); return; }
+    enter();
+  } },
+    h("label", { for: "email" }, "البريد الإلكتروني"), email,
+    h("label", { for: "pass" }, "كلمة المرور"), pass, box, h("p", {}, btn));
+  nav.hidden = true;
+  show(h("h1", {}, "لوحة إدارة استوديو الشخصيات"), form,
+    h("p", { class: "hint" }, "الدخول للمسؤولين فقط. تُمنح الصلاحية من الخادم وليس من هذه الصفحة."));
+  if (error) box.replaceChildren(msg(error, "err"));
+}
+
+async function enter() {
+  const { data: u } = await sb.auth.getUser();
+  if (!u || !u.user) return loginView();
+  const { data: roles, error } = await sb.from("user_roles").select("role").eq("user_id", u.user.id);
+  if (error || !roles || !roles.some(r => r.role === "administrator")) {
+    await sb.auth.signOut();
+    return loginView("هذا الحساب ليس مسؤولًا.");
+  }
+  nav.hidden = false;
+  render();
+}
+
+function render() {
+  nav.querySelectorAll("[data-tab]").forEach(b => {
+    if (b.dataset.tab === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  ({ dashboard: dashboardView, ads: adsView, audit: auditView })[tab]();
+}
+
+async function dashboardView() {
+  show(h("h1", {}, "لوحة المعلومات"), h("p", { class: "hint" }, "جارٍ التحميل…"));
+  const { data, error } = await sb.rpc("admin_stats");
+  if (error) return show(h("h1", {}, "لوحة المعلومات"), msg(explain(error), "err"));
+  const rows = [
+    ["المستخدمون", data.users], ["الحسابات المعطّلة", data.disabled_users], ["المشاريع المتزامنة", data.projects],
+    ["الأصول (الكل)", data.assets_total], ["الأصول المنشورة", data.assets_published],
+    ["النقاط الممنوحة", data.points_granted], ["النقاط المصروفة", data.points_spent],
+    ["إعلانات مكتملة اليوم", data.ads_granted_today], ["إعلانات مكتملة (الكل)", data.ads_granted_total],
+    ["مكافآت إعلانات مرفوضة", data.ads_rejected_total],
+  ];
+  show(h("h1", {}, "لوحة المعلومات"),
+    h("div", { class: "panel" }, h("dl", {}, rows.map(([k, v]) =>
+      h("div", { class: "row" }, h("dt", {}, k), h("dd", {}, Number(v).toLocaleString("ar-EG")))))),
+    msg("المدفوعات والاشتراكات غير معروضة لأنها لم تُنفَّذ بعد، ولن تُعرض أرقام لا مصدر لها.", "warn"),
+    h("button", { class: "secondary", onclick: dashboardView }, "تحديث"));
+}
+
+async function adsView() {
+  show(h("h1", {}, "الإعلانات المكافأة"), h("p", { class: "hint" }, "جارٍ التحميل…"));
+  const { data, error } = await sb.from("app_settings").select("value").eq("key", "rewarded_ads").maybeSingle();
+  if (error) return show(h("h1", {}, "الإعلانات المكافأة"), msg(explain(error), "err"));
+  const v = (data && data.value) || { enabled: false, points_per_ad: 0, daily_limit: 0, min_watch_seconds: 15, ticket_ttl_seconds: 600 };
+  const num = (id, val, min, max) => h("input", { type: "number", id, value: String(val), min, max, inputmode: "numeric" });
+  const enabled = h("input", { type: "checkbox", id: "enabled", checked: !!v.enabled });
+  const points = num("points", v.points_per_ad, 0, 1000);
+  const daily = num("daily", v.daily_limit, 0, 100);
+  const minw = num("minw", v.min_watch_seconds, 5, 120);
+  const ttl = num("ttl", v.ticket_ttl_seconds, 60, 3600);
+  const out = h("div");
+  const save = h("button", { type: "submit" }, "حفظ الإعدادات");
+  const form = h("form", { class: "panel", onsubmit: async (ev) => {
+    ev.preventDefault(); save.disabled = true;
+    const value = { enabled: enabled.checked, points_per_ad: parseInt(points.value, 10), daily_limit: parseInt(daily.value, 10),
+      min_watch_seconds: parseInt(minw.value, 10), ticket_ttl_seconds: parseInt(ttl.value, 10) };
+    const { error: e } = await sb.from("app_settings").upsert({ key: "rewarded_ads", value });
+    save.disabled = false;
+    out.replaceChildren(e ? msg(explain(e), "err") : msg("تم حفظ الإعدادات.", "ok"));
+  } },
+    h("div", { class: "check" }, enabled, h("label", { for: "enabled", style: "margin:0" }, "تفعيل الإعلانات المكافأة")),
+    h("label", { for: "points" }, "النقاط لكل إعلان"), points,
+    h("label", { for: "daily" }, "الحد اليومي لكل مستخدم (0 = بلا حد)"), daily,
+    h("label", { for: "minw" }, "أقل زمن مشاهدة قبل قبول المطالبة (ثانية)"), minw,
+    h("label", { for: "ttl" }, "صلاحية التذكرة (ثانية)"), ttl, out, h("p", {}, save));
+  show(h("h1", {}, "الإعلانات المكافأة"), form,
+    msg("هذه الإعدادات لا تثبت أن المستخدم شاهد الإعلان فعلًا؛ هي تحدّ من التكرار والتجاوز فقط. التحقق الخادمي من المزود لم يُثبَّت بعد.", "warn"));
+}
+
+async function auditView() {
+  show(h("h1", {}, "سجل التدقيق"), h("p", { class: "hint" }, "جارٍ التحميل…"));
+  const { data, error } = await sb.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(50);
+  if (error) return show(h("h1", {}, "سجل التدقيق"), msg(explain(error), "err"));
+  if (!data.length) return show(h("h1", {}, "سجل التدقيق"), h("div", { class: "panel" }, "لا توجد عمليات إدارية مسجّلة بعد."));
+  show(h("h1", {}, "سجل التدقيق"), h("div", { class: "panel" }, data.map(r =>
+    h("div", { class: "log" }, `${r.action} — ${r.target ?? ""}`,
+      h("small", {}, new Date(r.created_at).toLocaleString("ar-EG") + " • المسؤول " + String(r.admin_id).slice(0, 8))))));
+}
+
+nav.addEventListener("click", async (ev) => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.id === "logout") { await sb.auth.signOut(); return loginView(); }
+  if (b.dataset.tab) { tab = b.dataset.tab; render(); }
+});
+start();
+</script>
+</body>
+</html>
