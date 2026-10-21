@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import app.characterstudio.editor.ui.EditorScreen
+import app.characterstudio.export.ExportScreen
 import app.characterstudio.ui.home.HomeScreen
 import app.characterstudio.ui.newcharacter.NewCharacterScreen
 import app.characterstudio.ui.projects.ProjectsScreen
@@ -17,6 +18,8 @@ object Routes {
     const val NEW = "new"
     const val EDITOR = "editor/{projectId}"
     fun editor(id: String) = "editor/$id"
+    const val EXPORT = "export/{projectId}"
+    fun export(id: String) = "export/$id"
 }
 
 @Composable
@@ -48,6 +51,13 @@ fun AppNav() {
             EditorScreen(
                 projectId = entry.arguments?.getString("projectId").orEmpty(),
                 onExit = { nav.popBackStack() },
+                onExport = { nav.navigate(Routes.export(it)) },
+            )
+        }
+        composable(Routes.EXPORT, arguments = listOf(navArgument("projectId") { type = NavType.StringType })) { entry ->
+            ExportScreen(
+                projectId = entry.arguments?.getString("projectId").orEmpty(),
+                onBack = { nav.popBackStack() },
             )
         }
     }

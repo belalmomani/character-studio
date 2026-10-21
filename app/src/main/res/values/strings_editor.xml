@@ -64,4 +64,18 @@
     <string name="reset_all_title">إعادة ضبط التغييرات؟</string>
     <string name="reset_all_body">سيعود المشروع إلى حالته عند فتحه. يمكنك التراجع عن هذه الخطوة.</string>
     <string name="color_desc">لون %1$d</string>
+    <string name="export_action">تصدير</string>
+    <string name="export_title">تصدير الشخصية</string>
+    <string name="export_preview">معاينة التصدير</string>
+    <string name="export_format">الصيغة</string>
+    <string name="export_size">الدقة</string>
+    <string name="export_transparent">خلفية شفافة</string>
+    <string name="export_jpeg_note">صيغة JPEG لا تدعم الشفافية: تُستخدم خلفية بيضاء ما لم تحدد خلفية للمشروع.</string>
+    <string name="export_quality">الجودة: %1$d</string>
+    <string name="export_skeleton">تضمين الهيكل المرجعي ونقاط التثبيت</string>
+    <string name="export_save">حفظ في الجهاز</string>
+    <string name="export_share">مشاركة</string>
+    <string name="export_saved">تم حفظ الصورة.</string>
+    <string name="export_failed">فشل التصدير. تحقق من المساحة المتاحة وحاول مرة أخرى.</string>
+    <string name="export_oom">الذاكرة لا تكفي لهذه الدقة. اختر دقة أقل.</string>
 </resources>

@@ -44,6 +44,7 @@ private enum class DragMode { Pan, Layer, Anchor }
 fun EditorScreen(
     projectId: String,
     onExit: () -> Unit,
+    onExport: (String) -> Unit,
     vm: EditorViewModel = viewModel(key = projectId, factory = EditorViewModel.factory(projectId)),
 ) {
     val load by vm.loadState.collectAsStateWithLifecycle()
@@ -84,6 +85,10 @@ fun EditorScreen(
                     TextButton(onClick = ::requestExit) { Text(stringResource(R.string.back)) }
                 },
                 actions = {
+                    TextButton(
+                        onClick = { scope.launch { if (vm.saveNow()) onExport(projectId) else showExitDialog = true } },
+                        enabled = load == LoadState.Ready,
+                    ) { Text(stringResource(R.string.export_action)) }
                     TextButton(onClick = vm::undo, enabled = canUndo) { Text(stringResource(R.string.undo)) }
                     TextButton(onClick = vm::redo, enabled = canRedo) { Text(stringResource(R.string.redo)) }
                 },

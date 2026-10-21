@@ -17,9 +17,30 @@ android {
         versionCode = 1
         versionName = "0.1.0"
     }
+    signingConfigs {
+        // مفتاح debug ثابت داخل المستودع عمدًا: كل بناء يُوقَّع بالتوقيع نفسه فيُحدَّث التطبيق فوق السابق.
+        // معروف علنًا (كلمة المرور android) فهو للاختبار فقط ولا يصلح للنشر.
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+        // توقيع الإصدار يُقرأ من متغيرات بيئة (GitHub Secrets) ولا يُحفظ في المستودع.
+        val releaseStore = System.getenv("RELEASE_KEYSTORE_PATH")
+        if (releaseStore != null) {
+            create("release") {
+                storeFile = file(releaseStore)
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
-            isMinifyEnabled = true
+            signingConfigs.findByName("release")?.let { signingConfig = it }
+            isMinifyEnabled = false // يُفعَّل بعد اختبار قواعد R8 مع Room وserialization
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
