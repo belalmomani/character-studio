@@ -13,6 +13,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,7 +79,7 @@ fun LayersPanel(
         // الأعلى في القائمة = الأمامي في الرسم
         items(scene.layers.asReversed(), key = { it.id }) { l ->
             val sel = l.id == selectedId
-            var menu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            var menu by remember { mutableStateOf(false) }
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = if (sel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
@@ -148,7 +152,7 @@ fun PropertiesPanel(scene: Scene, selectedId: String?, vm: EditorViewModel, onDe
             valueRange = 0f..1f, onValueChangeFinished = vm::endLive)
 
         Text(stringResource(R.string.prop_color), style = MaterialTheme.typography.titleSmall)
-        if (enabled) ColorRow(l.colorArgb) { vm.setColor(l.id, it) }
+        if (enabled) ColorRow(selected = l.colorArgb, onPick = { vm.setColor(l.id, it) })
 
         l.attachedAnchorId?.let { aid ->
             val label = scene.anchors.firstOrNull { it.id == aid }?.label ?: aid
