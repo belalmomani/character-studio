@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import app.characterstudio.editor.ui.EditorScreen
 import app.characterstudio.export.ExportScreen
 import app.characterstudio.ui.home.HomeScreen
+import app.characterstudio.ui.info.InfoScreen
+import app.characterstudio.ui.settings.SettingsScreen
 import app.characterstudio.ui.newcharacter.NewCharacterScreen
 import app.characterstudio.ui.projects.ProjectsScreen
 
@@ -16,6 +18,9 @@ object Routes {
     const val HOME = "home"
     const val PROJECTS = "projects"
     const val NEW = "new"
+    const val SETTINGS = "settings"
+    const val INFO = "info/{kind}"
+    fun info(kind: String) = "info/$kind"
     const val EDITOR = "editor/{projectId}"
     fun editor(id: String) = "editor/$id"
     const val EXPORT = "export/{projectId}"
@@ -30,6 +35,7 @@ fun AppNav() {
             HomeScreen(
                 onProjects = { nav.navigate(Routes.PROJECTS) },
                 onNewCharacter = { nav.navigate(Routes.NEW) },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
             )
         }
         composable(Routes.PROJECTS) {
@@ -59,6 +65,12 @@ fun AppNav() {
                 projectId = entry.arguments?.getString("projectId").orEmpty(),
                 onBack = { nav.popBackStack() },
             )
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onBack = { nav.popBackStack() }, onInfo = { nav.navigate(Routes.info(it)) })
+        }
+        composable(Routes.INFO, arguments = listOf(navArgument("kind") { type = NavType.StringType })) { entry ->
+            InfoScreen(kind = entry.arguments?.getString("kind").orEmpty(), onBack = { nav.popBackStack() })
         }
     }
 }

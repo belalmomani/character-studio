@@ -7,10 +7,14 @@ import app.characterstudio.assets.AssetDatabase
 import app.characterstudio.assets.AssetRepository
 import app.characterstudio.data.AppDatabase
 import app.characterstudio.data.ProjectRepository
+import app.characterstudio.settings.DailyReminder
+import app.characterstudio.settings.SettingsStore
+import androidx.work.ExistingWorkPolicy
 
 class AppContainer(context: Context) {
     private val db = Room.databaseBuilder(context, AppDatabase::class.java, "character_studio.db").build()
     val projects = ProjectRepository(db.projectDao())
+    val settings = SettingsStore(context.applicationContext)
 
     // ذاكرة مؤقتة قابلة لإعادة المزامنة، لذلك يجوز مسحها عند تغيّر المخطط (بخلاف قاعدة المشاريع).
     private val assetDb by lazy {
@@ -23,4 +27,10 @@ class AppContainer(context: Context) {
 
 class CharacterStudioApp : Application() {
     val container: AppContainer by lazy { AppContainer(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+        DailyReminder.createChannel(this)
+        DailyReminder.schedule(this, container.settings.state.value, ExistingWorkPolicy.KEEP)
+    }
 }
