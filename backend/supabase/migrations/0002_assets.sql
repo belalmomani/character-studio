@@ -121,26 +121,31 @@ create policy ver_admin on public.asset_versions for all to authenticated using 
 create policy unlock_read on public.asset_unlocks for select to authenticated using (user_id = auth.uid() or public.is_admin());
 revoke insert, update, delete on public.asset_unlocks from anon, authenticated;
 
--- مزامنة تزايدية: كل ما تغيّر منذ آخر مزامنة (تشمل hidden/archived ليعرفها العميل
--- دون حذف نسخ المشاريع المحفوظة محليًا)، وتستبعد ما يتطلب إصدار تطبيق أحدث.
-create or replace function public.list_assets_since(p_since timestamptz, p_app_version int)
+-- مزامنة تزايدية بترقيم مفتاحي (updated_at, id): لا تفقد صفوفًا تتشارك الطابع الزمني نفسه
+-- (الاستيراد الجماعي في معاملة واحدة يعطي كل الصفوف now() نفسها). الطابع الزمني بالميكروثانية.
+-- تُرجع المخفي والمؤرشف أيضًا ليعرفها العميل دون حذف نسخ المشاريع المحفوظة،
+-- وتستبعد ما يحتاج إصدار تطبيق أحدث. حالة الفتح للمستخدم تُقرأ من asset_unlocks مباشرة.
+create or replace function public.list_assets_since(p_since_us bigint, p_after_id uuid, p_app_version int)
 returns table (
   asset_id uuid, category_id uuid, name_ar text, art_style text, angle text, access_level text,
-  points_cost int, status text, updated_at timestamptz, version_id uuid, version int, file_type text,
+  points_cost int, status text, updated_at_us bigint, version_id uuid, version int, file_type text,
   file_public_id text, thumb_public_id text, width int, height int, file_bytes int, sha256 text,
-  anchors jsonb, compatibility jsonb, unlocked boolean
+  anchors jsonb, compatibility jsonb
 ) language sql stable security invoker set search_path = public as $$
-  select a.id, a.category_id, a.name_ar, a.art_style, a.angle, a.access_level, a.points_cost, a.status, a.updated_at,
+  select a.id, a.category_id, a.name_ar, a.art_style, a.angle, a.access_level, a.points_cost, a.status,
+         (extract(epoch from a.updated_at) * 1000000)::bigint,
          v.id, v.version, v.file_type, v.file_public_id, v.thumb_public_id, v.width, v.height, v.file_bytes, v.sha256,
-         v.anchors, v.compatibility,
-         (a.access_level = 'free' or exists (select 1 from public.asset_unlocks u where u.user_id = auth.uid() and u.asset_id = a.id))
+         v.anchors, v.compatibility
   from public.assets a
   join public.asset_versions v on v.id = a.current_version_id
-  where a.updated_at > p_since and v.min_app_version <= p_app_version
-  order by a.updated_at
+  where (a.updated_at, a.id) > (
+          'epoch'::timestamptz + p_since_us * interval '1 microsecond',
+          coalesce(p_after_id, '00000000-0000-0000-0000-000000000000'::uuid))
+    and v.min_app_version <= p_app_version
+  order by a.updated_at, a.id
   limit 500;
 $$;
-grant execute on function public.list_assets_since(timestamptz, int) to authenticated;
+grant execute on function public.list_assets_since(bigint, uuid, int) to authenticated;
 
 -- فتح أصل مدفوع بالنقاط: ذري (الخصم + الفتح في معاملة واحدة)، ومكرر الطلب لا يخصم مرتين
 create or replace function public.unlock_asset(p_asset_id uuid, p_key text)
