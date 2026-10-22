@@ -1,6 +1,6 @@
-// عدّل القيمتين من Supabase → Project Settings → API.
-// ضع هنا مفتاح "anon / publishable" العام فقط. لا تضع service_role أبدًا في هذا الملف.
+// عدّل القيم من لوحات الخدمات. لا تضع هنا أي سر.
 window.APP_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "",            // Supabase → Project Settings → API → Project URL
+  SUPABASE_ANON_KEY: "",       // المفتاح العام anon/publishable فقط. لا service_role أبدًا
+  CLOUDINARY_CLOUD_NAME: "",   // اسم السحابة (عام) لعرض الصور المصغرة
 };

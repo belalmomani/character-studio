@@ -1,133 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">استوديو الشخصيات</string>
-
-    <!-- Home -->
-    <string name="home_empty_title">شخصيتك ثلاثية الأبعاد ستظهر هنا</string>
-    <string name="home_empty_hint">اختر صورة من هاتفك أو التقطها لتبدأ</string>
-    <string name="action_pick">اختيار صورة</string>
-    <string name="action_capture">التقاط صورة</string>
-    <string name="action_privacy">الخصوصية</string>
-    <string name="action_back">رجوع</string>
-
-    <!-- Review -->
-    <string name="review_title">مراجعة الصورة</string>
-    <string name="review_tips">للحصول على نتيجة أفضل: صورة واضحة وإضاءة جيدة وجسم ظاهر قدر الإمكان. جودة النموذج تعتمد على الصورة وعلى الخدمة المستخدمة.</string>
-    <string name="review_image_description">الصورة المختارة</string>
-    <string name="action_rotate_right">تدوير يمينًا</string>
-    <string name="action_rotate_left">تدوير يسارًا</string>
-    <string name="action_replace">استبدال الصورة</string>
-    <string name="action_confirm">متابعة</string>
-    <string name="action_cancel">إلغاء</string>
-    <string name="review_missing_image">لا توجد صورة. ارجع واختر صورة.</string>
-
-    <!-- Processing -->
-    <string name="processing_title">إنشاء النموذج</string>
-    <string name="state_ready">جاهز للرفع</string>
-    <string name="state_uploading">جارٍ رفع الصورة</string>
-    <string name="state_generating">جارٍ إنشاء النموذج</string>
-    <string name="state_downloading">جارٍ تنزيل النتيجة</string>
-    <string name="state_validating">جارٍ التحقق من الملف</string>
-    <string name="state_completed">اكتملت العملية</string>
-    <string name="state_completed_note">اكتمل إنشاء النموذج وفُتح في المعاينة.</string>
-    <string name="state_cancelled">ألغيت العملية</string>
-    <string name="state_failed">فشلت العملية</string>
-    <string name="action_retry">إعادة المحاولة</string>
-    <string name="action_pick_another">اختيار صورة أخرى</string>
-
-    <string name="failure_not_configured">لم يُضبط خادم إنشاء النماذج بعد، ولم يُرسَل أي شيء من صورتك خارج جهازك. افتح الإعدادات وأدخل عنوان الخادم، ثم ارجع إلى مراجعة الصورة واضغط متابعة.</string>
-    <string name="failure_network">تعذّر الاتصال بالإنترنت. تحقق من الاتصال ثم أعد المحاولة.</string>
-    <string name="failure_timeout">انتهت مهلة الخدمة قبل اكتمال العملية. أعد المحاولة لاحقًا.</string>
-    <string name="failure_quota">استُهلك الحد المتاح للخدمة حاليًا. حاول لاحقًا.</string>
-    <string name="failure_invalid_model">الملف الناتج غير صالح كنموذج ثلاثي الأبعاد. جرّب صورة أخرى.</string>
-    <string name="failure_unknown">حدث خطأ غير متوقع. أعد المحاولة أو اختر صورة أخرى.</string>
-
-    <!-- Image errors -->
-    <string name="error_unsupported">هذه الصورة غير مدعومة أو تالفة. اختر صورة أخرى.</string>
-    <string name="error_too_large">الصورة كبيرة جدًا على ذاكرة الجهاز. اختر صورة أصغر.</string>
-    <string name="error_io">تعذّرت قراءة الصورة. حاول مرة أخرى.</string>
-    <string name="error_camera_unavailable">لا يوجد تطبيق كاميرا متاح على هذا الجهاز.</string>
-
-    <!-- GLB viewer -->
-    <string name="action_open_glb">عرض ملف GLB موجود</string>
-    <string name="action_previous">السابق</string>
-    <string name="action_next">التالي</string>
-    <string name="action_play">تشغيل</string>
-    <string name="action_pause">إيقاف مؤقت</string>
-    <string name="action_loop_on">التكرار: مفعّل</string>
-    <string name="action_loop_off">التكرار: متوقف</string>
-    <string name="viewer_title">معاينة النموذج</string>
-    <string name="viewer_loading">جارٍ تحميل النموذج</string>
-    <string name="viewer_failed">تعذّر تحميل النموذج. قد يكون الملف تالفًا أو يستخدم ميزات غير مدعومة.</string>
-    <string name="viewer_no_model">لا يوجد نموذج للعرض. ارجع وافتح ملف GLB.</string>
-    <string name="viewer_gesture_hint">اسحب للتدوير، وافتح الإصبعين للتكبير والتصغير.</string>
-    <string name="viewer_reset_camera">إعادة ضبط الكاميرا</string>
-    <string name="viewer_features">يحتوي الملف على: %1$s (فحص نصي سريع، لا يضمن سلامة الهيكل أو الأوزان).</string>
-    <string name="viewer_features_none">لا يحتوي الملف على مواد أو هيكل عظمي أو حركات.</string>
-    <string name="feature_materials">مواد</string>
-    <string name="feature_skeleton">هيكل عظمي</string>
-    <string name="feature_animations">حركات</string>
-    <string name="feature_morph">Morph Targets</string>
-    <string name="viewer_no_animations">لا توجد حركات مضمّنة في هذا الملف، فلا شيء يُشغَّل.</string>
-    <string name="viewer_animation_label">الحركة %1$d من %2$d: %3$s</string>
-    <string name="viewer_animation_unnamed">بلا اسم</string>
-    <string name="viewer_speed">السرعة %1$s×</string>
-
-    <!-- Settings and upload consent -->
-    <string name="action_settings">الإعدادات</string>
-    <string name="action_open_settings">فتح الإعدادات</string>
-    <string name="settings_title">إعدادات خادم التحويل</string>
-    <string name="settings_intro">إنشاء النموذج من الصورة يحتاج خادمًا تملكه أو تثق به. أدخل عنوانه هنا. لا يتضمن التطبيق أي خادم أو مفتاح.</string>
-    <string name="settings_url_label">عنوان الخادم (HTTPS فقط)</string>
-    <string name="settings_token_label">رمز الدخول (اختياري)</string>
-    <string name="settings_token_saved">رمز محفوظ ومشفّر على هذا الجهاز. اتركه فارغًا للإبقاء عليه.</string>
-    <string name="settings_token_none">لا يوجد رمز محفوظ.</string>
-    <string name="settings_token_clear">حذف الرمز المحفوظ</string>
-    <string name="settings_save">حفظ</string>
-    <string name="settings_test">اختبار الاتصال</string>
-    <string name="settings_saved">تم الحفظ.</string>
-    <string name="settings_invalid_url">العنوان غير صالح. يجب أن يبدأ بـ https:// وألا يحتوي على مسافات أو بيانات دخول أو علامة ؟.</string>
-    <string name="settings_test_ok">الخادم يستجيب.</string>
-    <string name="settings_test_auth">رفض الخادم الرمز. تحقق منه.</string>
-    <string name="settings_test_timeout">انتهت مهلة الاتصال بالخادم.</string>
-    <string name="settings_test_network">تعذّر الوصول إلى الخادم. تحقق من العنوان والاتصال.</string>
-    <string name="settings_test_bad">ردّ الخادم بشكل غير متوقع. تأكد أنه يطبّق الواجهة الموثقة في docs/SERVER_CONTRACT.md.</string>
-    <string name="settings_privacy_note">اختبار الاتصال لا يرسل أي صورة. الصور لا تُرسل إلا بعد موافقتك الصريحة في كل مرة.</string>
-    <string name="consent_title">إرسال الصورة إلى الخادم؟</string>
-    <string name="consent_body">ستُرسل الصورة عبر اتصال مشفّر إلى:\n%1$s\n\nلا يتحكم هذا التطبيق في طريقة حفظ الخادم للصور أو مدة بقائها. يطلب التطبيق من الخادم حذفها بعد التنزيل أو الإلغاء، لكنه لا يستطيع ضمان ذلك.</string>
-    <string name="consent_agree">موافق وأرسل</string>
-    <string name="failure_auth">رفض الخادم الرمز. تحقق منه في الإعدادات.</string>
-
-    <!-- Help -->
-    <string name="action_help">المساعدة</string>
-    <string name="help_title">المساعدة</string>
-    <string name="help_body">كيف تستخدم التطبيق\n\n• لعرض نموذج جاهز: اضغط «عرض ملف GLB موجود» واختر ملفًا بصيغة GLB من هاتفك.\n• في المعاينة: اسحب لتدوير النموذج، وافتح الإصبعين للتكبير والتصغير، و«إعادة ضبط الكاميرا» تعيد العرض الأول.\n• إن احتوى الملف على حركات فتظهر أزرار اختيار الحركة والإيقاف والسرعة والتكرار.\n• للحفظ: اضغط «تصدير»، عدّل الاسم إن أردت، ثم اختر المكان.\n• لإنشاء نموذج من صورة تحتاج خادم تحويل تملكه أو تثق به: أدخل عنوانه في «الإعدادات». بدونه لا يُرسَل شيء ولا يُنشأ نموذج.\n\nمشاكل شائعة\n\n• «الملف ليس GLB صالحًا»: التطبيق يقبل GLB فقط. ملفات FBX أو OBJ أو glTF ذات الملفات المنفصلة غير مدعومة.\n• «الملف أكبر من الحد المسموح»: الحد 80 ميغابايت.\n• «تعذّر تحميل النموذج»: قد يكون الملف تالفًا أو يستخدم ضغطًا أو امتدادات غير مدعومة.\n• لا تظهر حركات: الملف لا يحتوي عليها. التطبيق لا ينشئ حركات.\n• النموذج يبدو مظلمًا أو ساطعًا: الإضاءة ثابتة حاليًا ولا يمكن تغييرها بعد.\n• ملف التصدير لا يُحفظ: تأكد من وجود مساحة كافية، أو اختر موقعًا آخر.\n\nما لا يفعله التطبيق حاليًا\n\nتخصيص الشكل والملابس، تجهيز الهيكل العظمي، إنشاء الحركات، تعابير الوجه، الصوت، وتصدير FBX وglTF.</string>
-
-    <!-- Export -->
-    <string name="action_export">تصدير</string>
-    <string name="action_save">حفظ الملف</string>
-    <string name="action_save_retry">إعادة المحاولة</string>
-    <string name="export_title">تصدير النموذج</string>
-    <string name="export_no_model">لا يوجد نموذج للتصدير. افتح ملف GLB أولًا.</string>
-    <string name="export_format">الصيغة: GLB. هي الصيغة الوحيدة المدعومة حاليًا، أما glTF وFBX فغير منفَّذتين بعد.</string>
-    <string name="export_size">حجم الملف: %1$s ميغابايت</string>
-    <string name="export_check_present">✓ %1$s</string>
-    <string name="export_check_absent">✗ بلا %1$s</string>
-    <string name="export_static_warning">لا يحتوي النموذج على هيكل عظمي، فالملف ثابت وغير جاهز للتحريك في محرك اللعبة.</string>
-    <string name="export_note">يُحفظ الملف كما فُتح دون تعديل. إعدادات الكاميرا والإضاءة داخل التطبيق للمعاينة فقط ولا تُضمَّن فيه. لم نختبر الملف في Unity أو Unreal أو Godot.</string>
-    <string name="export_name_label">اسم الملف</string>
-    <string name="export_will_save_as">سيُحفظ باسم: %1$s</string>
-    <string name="export_saving">جارٍ الحفظ والتحقق من الملف المكتوب</string>
-    <string name="export_success">تم الحفظ (%1$s ميغابايت) بعد التحقق من الملف المكتوب.</string>
-    <string name="export_failed_io">تعذّر حفظ الملف. قد تكون المساحة غير كافية أو الموقع غير مسموح بالكتابة فيه.</string>
-    <string name="export_failed_verify">كُتب الملف لكن التحقق من حجمه فشل، فحُذف. أعد المحاولة في موقع آخر.</string>
-
-    <!-- GLB import errors -->
-    <string name="error_glb_invalid">الملف ليس GLB صالحًا. اختر ملفًا آخر.</string>
-    <string name="error_glb_too_large">الملف أكبر من الحد المسموح (80 ميغابايت).</string>
-    <string name="error_glb_io">تعذّرت قراءة الملف. حاول مرة أخرى.</string>
-
-    <!-- Privacy -->
-    <string name="privacy_title">الخصوصية</string>
-    <string name="privacy_body">• صورتك تبقى على جهازك داخل مجلد مؤقت، وتُحذف عند الإلغاء أو إغلاق التطبيق.\n\n• لا تُرسَل أي صورة إلا إذا أدخلتَ عنوان خادم في الإعدادات ووافقتَ صراحةً في كل مرة قبل المتابعة، ويظهر لك عنوان الخادم في نافذة الموافقة. الاتصال مشفّر (HTTPS فقط).\n\n• الخادم هو خادمك أو خادم تثق به، ولا يتحكم التطبيق في طريقة حفظه للصور. يطلب التطبيق الحذف بعد التنزيل أو الإلغاء لكنه لا يضمنه.\n\n• لا توجد حسابات ولا مكتبة سحابية، ولا يُجمع أي بيانات تحليلية.\n\n• لا يطلب التطبيق إذن الكاميرا ولا الوصول الواسع للملفات؛ تُستخدم الكاميرا ومنتقي الصور من النظام.</string>
+    <string name="app_name">استوديو تصميم الشخصيات</string>
+    <string name="home_title">Character Studio</string>
+    <string name="home_subtitle">صمّم شخصياتك واحفظها وعدّلها في أي وقت</string>
+    <string name="home_new_character">شخصية جديدة</string>
+    <string name="home_new_character_desc">ابدأ مشروعًا جديدًا بنمط فني تختاره</string>
+    <string name="home_my_projects">مشاريعي</string>
+    <string name="home_my_projects_desc">افتح مشاريعك المحفوظة على الجهاز</string>
+    <string name="back">رجوع</string>
+    <string name="projects_title">مشاريعي</string>
+    <string name="search_hint">ابحث عن مشروع</string>
+    <string name="sort_recent">الأحدث تعديلًا</string>
+    <string name="sort_name">الاسم</string>
+    <string name="empty_projects_title">لا توجد مشاريع بعد</string>
+    <string name="empty_projects_body">أنشئ أول شخصية لتظهر هنا.</string>
+    <string name="empty_search">لا توجد نتائج مطابقة للبحث.</string>
+    <string name="menu_rename">إعادة تسمية</string>
+    <string name="menu_duplicate">تكرار</string>
+    <string name="menu_delete">حذف</string>
+    <string name="more_options">خيارات</string>
+    <string name="rename_title">إعادة تسمية المشروع</string>
+    <string name="delete_title">حذف المشروع؟</string>
+    <string name="delete_body">سيُحذف المشروع «%1$s» من هذا الجهاز نهائيًا.</string>
+    <string name="confirm">تأكيد</string>
+    <string name="cancel">إلغاء</string>
+    <string name="duplicate_suffix">(نسخة)</string>
+    <string name="project_updated">آخر تعديل: %1$s</string>
+    <string name="new_title">شخصية جديدة</string>
+    <string name="field_project_name">اسم المشروع</string>
+    <string name="field_art_style">النمط الفني</string>
+    <string name="style_realistic_2d">واقعي ثنائي الأبعاد</string>
+    <string name="style_cartoon">كرتوني</string>
+    <string name="style_anime">أنمي</string>
+    <string name="style_simple_game">ألعاب مبسّط</string>
+    <string name="create_project">إنشاء المشروع</string>
+    <string name="error_invalid_name">أدخل اسمًا من 1 إلى 60 حرفًا.</string>
+    <string name="error_generic">تعذّر تنفيذ العملية. حاول مرة أخرى.</string>
 </resources>
