@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HAS_RELEASE_KEY: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      CLOUDINARY_CLOUD_NAME: ${{ vars.CLOUDINARY_CLOUD_NAME }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

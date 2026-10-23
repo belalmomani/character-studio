@@ -3,9 +3,11 @@ package app.characterstudio.editor.render
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import app.characterstudio.editor.model.DefaultSkeleton
 import app.characterstudio.editor.model.Layer
 import app.characterstudio.editor.model.LayerKind
@@ -18,6 +20,8 @@ data class RenderOptions(
     val selectedLayerId: String? = null,
     /** طول بكسل شاشة واحد بوحدات اللوحة (1/scale) لرسم خطوط بسمك ثابت على الشاشة. */
     val unit: Float = 1f,
+    /** يوفّر صورة طبقة الأصل (أو null إن لم تُحمَّل بعد: يُرسم مستطيل بديل). */
+    val images: (Layer) -> ImageBitmap? = { null },
 )
 
 /**
@@ -45,7 +49,7 @@ fun DrawScope.drawScene(scene: Scene, o: RenderOptions) {
         }
     }
 
-    for (layer in scene.layers) if (layer.visible) drawLayer(layer)
+    for (layer in scene.layers) if (layer.visible) drawLayer(layer, o)
 
     if (o.showSkeleton) {
         val byId = scene.anchors.associateBy { it.id }
@@ -74,7 +78,7 @@ fun DrawScope.drawScene(scene: Scene, o: RenderOptions) {
     }
 }
 
-private fun DrawScope.drawLayer(l: Layer) {
+private fun DrawScope.drawLayer(l: Layer, o: RenderOptions) {
     val t = l.transform
     val color = Color(l.colorArgb)
     rotate(t.rotation, Offset(t.x, t.y)) {
@@ -83,6 +87,19 @@ private fun DrawScope.drawLayer(l: Layer) {
         when (l.kind) {
             LayerKind.Ellipse -> drawOval(color, tl, size, alpha = l.opacity)
             LayerKind.Rect -> drawRect(color, tl, size, alpha = l.opacity)
+            LayerKind.Asset -> {
+                val img = o.images(l)
+                if (img != null) {
+                    withTransform({
+                        translate(tl.x, tl.y)
+                        scale(t.width / img.width, t.height / img.height, Offset.Zero)
+                    }) { drawImage(img, Offset.Zero, alpha = l.opacity) }
+                } else {
+                    // صورة الأصل غير متاحة محليًا: نُظهر مكانها بدل إخفائه بصمت
+                    drawRect(Color(0x33808080), tl, size)
+                    drawRect(Color(0xFF808080), tl, size, style = Stroke(width = 2f * o.unit))
+                }
+            }
         }
     }
 }

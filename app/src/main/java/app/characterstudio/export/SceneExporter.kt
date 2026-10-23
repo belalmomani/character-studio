@@ -20,7 +20,7 @@ import java.io.OutputStream
 
 /** يرسم المشهد بنفس دالة drawScene المستخدمة في المحرر، فتتطابق الطبقات والألوان والمواضع. */
 object SceneExporter {
-    fun render(scene: Scene, options: ExportOptions): Bitmap {
+    fun render(scene: Scene, options: ExportOptions, images: (app.characterstudio.editor.model.Layer) -> ImageBitmap? = { null }): Bitmap {
         val size = options.size
         val bg = ExportRules.effectiveBackground(options, scene.backgroundArgb)
         val image = ImageBitmap(size, size, ImageBitmapConfig.Argb8888, hasAlpha = true)
@@ -37,6 +37,7 @@ object SceneExporter {
                         showChecker = false,
                         selectedLayerId = null,
                         unit = 1f / scale,
+                        images = images,
                     ),
                 )
             }

@@ -78,4 +78,23 @@
     <string name="export_saved">تم حفظ الصورة.</string>
     <string name="export_failed">فشل التصدير. تحقق من المساحة المتاحة وحاول مرة أخرى.</string>
     <string name="export_oom">الذاكرة لا تكفي لهذه الدقة. اختر دقة أقل.</string>
+    <string name="library_title">مكتبة الأصول</string>
+    <string name="library_refresh">تحديث</string>
+    <string name="library_all">كل الأنماط</string>
+    <string name="library_all_categories">كل الفئات</string>
+    <string name="library_syncing">جارٍ تحديث المكتبة…</string>
+    <string name="library_synced">اكتمل التحديث (%1$d تغيير).</string>
+    <string name="library_sync_failed">تعذّر تحديث المكتبة. تحقق من الاتصال وحاول مرة أخرى.</string>
+    <string name="library_empty">لا توجد أصول منشورة بعد.</string>
+    <string name="library_not_configured">لم يُضبط الاتصال بالمكتبة في هذا الإصدار (يتطلب إعداد SUPABASE_URL وSUPABASE_ANON_KEY وCLOUDINARY_CLOUD_NAME وقت البناء).</string>
+    <string name="library_free">مجاني</string>
+    <string name="library_unlocked">مفتوح</string>
+    <string name="library_paid">مدفوع • %1$d نقطة</string>
+    <string name="library_paid_needs_account">الأصول المدفوعة تحتاج حسابًا ونقاطًا، وهذه الميزة لم تُفعَّل بعد.</string>
+    <string name="add_from_library">إضافة من مكتبة الأصول</string>
+    <string name="asset_downloading">جارٍ تنزيل الأصل والتحقق منه…</string>
+    <string name="asset_failed">تعذّر تنزيل الأصل. تحقق من الاتصال وحاول مرة أخرى.</string>
+    <string name="asset_sha_mismatch">فشل التحقق من سلامة ملف الأصل (البصمة لا تطابق). لم يُضَف.</string>
+    <string name="home_library">مكتبة الأصول</string>
+    <string name="home_library_desc">تصفّح الأصول المنشورة وحدّث المكتبة</string>
 </resources>

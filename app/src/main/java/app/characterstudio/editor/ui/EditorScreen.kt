@@ -24,6 +24,12 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import app.characterstudio.CharacterStudioApp
+import app.characterstudio.ui.library.AssetLibraryContent
+import app.characterstudio.ui.library.LibraryViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,6 +65,19 @@ fun EditorScreen(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val container = (ctx.applicationContext as CharacterStudioApp).container
+    val store = container.imageStore
+    val imageRev by store.revision.collectAsStateWithLifecycle()
+    val imagesProvider = remember(store) { { l: Layer -> l.assetFile?.let { store.peek(it, 1024) } } }
+    val snackbar = remember { SnackbarHostState() }
+    val failedMsg = stringResource(R.string.asset_failed)
+    val shaMsg = stringResource(R.string.asset_sha_mismatch)
+    var showLibrary by remember { mutableStateOf(false) }
+    var addingAsset by remember { mutableStateOf(false) }
+    // تحميل صور طبقات الأصول المحفوظة محليًا (يعيد الرسم عند اكتمالها)
+    val assetFiles = scene?.layers?.mapNotNull { it.assetFile }?.toSet().orEmpty()
+    LaunchedEffect(assetFiles) { assetFiles.forEach { store.load(it, 1024) } }
+
     val ellipseName = stringResource(R.string.shape_ellipse)
     val rectName = stringResource(R.string.shape_rect)
     var tab by remember { mutableStateOf(Tab.None) }
@@ -78,6 +97,7 @@ fun EditorScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = { Text(name.ifEmpty { stringResource(R.string.new_title) }, maxLines = 1) },
@@ -130,15 +150,19 @@ fun EditorScreen(
                             TextButton(onClick = { scope.launch { vm.saveNow() } }) { Text(stringResource(R.string.save_now)) }
                         }
 
-                        EditorCanvas(vm, sc, selectedId, anchorMode, view, Modifier.weight(1f).fillMaxWidth())
+                        if (addingAsset) LinearProgressIndicator(Modifier.fillMaxWidth())
+                        EditorCanvas(vm, sc, selectedId, anchorMode, view, imagesProvider, imageRev, Modifier.weight(1f).fillMaxWidth())
 
                         if (tab != Tab.None) {
                             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
                                 when (tab) {
-                                    Tab.Add -> AddPanel { kind ->
-                                        val base = if (kind == LayerKind.Ellipse) ellipseName else rectName
-                                        vm.addShape(kind, "$base ${sc.layers.size + 1}")
-                                    }
+                                    Tab.Add -> AddPanel(
+                                        onAdd = { kind ->
+                                            val base = if (kind == LayerKind.Ellipse) ellipseName else rectName
+                                            vm.addShape(kind, "$base ${sc.layers.size + 1}")
+                                        },
+                                        onLibrary = { showLibrary = true },
+                                    )
                                     Tab.Layers -> LayersPanel(
                                         sc, selectedId, vm,
                                         onRename = { renaming = it },
@@ -202,6 +226,28 @@ fun EditorScreen(
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
+    if (showLibrary) {
+        Dialog(onDismissRequest = { showLibrary = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Surface(Modifier.fillMaxSize()) {
+                val libVm: LibraryViewModel = viewModel(key = "editor-library", factory = LibraryViewModel.Factory)
+                AssetLibraryContent(
+                    vm = libVm,
+                    onClose = { showLibrary = false },
+                    onPick = { asset ->
+                        showLibrary = false
+                        scope.launch {
+                            addingAsset = true
+                            container.assetFiles.ensureLocal(asset)
+                                .onSuccess { file -> vm.addAssetLayer(asset, file) }
+                                .onFailure { e -> snackbar.showSnackbar(if (e.message == "sha_mismatch") shaMsg else failedMsg) }
+                            addingAsset = false
+                        }
+                    },
+                )
+            }
+        }
+    }
+
     if (confirmResetAll) AlertDialog(
         onDismissRequest = { confirmResetAll = false },
         title = { Text(stringResource(R.string.reset_all_title)) },
@@ -218,6 +264,8 @@ private fun EditorCanvas(
     selectedId: String?,
     anchorMode: Boolean,
     view: app.characterstudio.editor.model.Viewport,
+    images: (Layer) -> ImageBitmap?,
+    imageRev: Int,
     modifier: Modifier,
 ) {
     var size by remember { mutableStateOf(IntSize.Zero) }
@@ -273,6 +321,7 @@ private fun EditorCanvas(
                 }
             },
     ) {
+        val redrawToken = imageRev // قراءة صريحة: تعيد الرسم عند اكتمال تحميل صورة أصل
         drawRect(canvasBg)
         val m = mapping
         withTransform({
@@ -283,7 +332,7 @@ private fun EditorCanvas(
                 scene,
                 RenderOptions(
                     showSkeleton = scene.showSkeleton, showAnchors = scene.showAnchors,
-                    showChecker = true, selectedLayerId = selectedId, unit = 1f / m.scale,
+                    showChecker = true, selectedLayerId = selectedId, unit = 1f / m.scale, images = images,
                 ),
             )
         }

@@ -4,6 +4,9 @@ import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import app.characterstudio.assets.AssetDatabase
+import app.characterstudio.assets.AssetFiles
+import app.characterstudio.assets.AssetImageStore
+import app.characterstudio.assets.SupabaseAssetRemote
 import app.characterstudio.assets.AssetRepository
 import app.characterstudio.data.AppDatabase
 import app.characterstudio.data.ProjectRepository
@@ -22,7 +25,20 @@ class AppContainer(context: Context) {
             .fallbackToDestructiveMigration()
             .build()
     }
-    val assets: AssetRepository by lazy { AssetRepository(assetDb.assetDao()) }
+    /** هل ضُبط الخادم وقت البناء؟ (SUPABASE_URL وSUPABASE_ANON_KEY وCLOUDINARY_CLOUD_NAME) */
+    val libraryConfigured: Boolean =
+        BuildConfig.SUPABASE_URL.isNotEmpty() && BuildConfig.SUPABASE_ANON_KEY.isNotEmpty() && BuildConfig.CLOUDINARY_CLOUD_NAME.isNotEmpty()
+    val cloudName: String = BuildConfig.CLOUDINARY_CLOUD_NAME
+
+    val assetFiles = AssetFiles(context.applicationContext, BuildConfig.CLOUDINARY_CLOUD_NAME)
+    val imageStore = AssetImageStore(assetFiles)
+    val assets: AssetRepository by lazy {
+        AssetRepository(
+            assetDb.assetDao(),
+            remote = if (libraryConfigured) SupabaseAssetRemote(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) else null,
+            appVersion = BuildConfig.VERSION_CODE,
+        )
+    }
 }
 
 class CharacterStudioApp : Application() {

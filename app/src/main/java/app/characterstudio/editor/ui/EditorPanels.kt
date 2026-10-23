@@ -54,11 +54,11 @@ private fun ColorRow(selected: Long?, onPick: (Long) -> Unit, extra: (@Composabl
 private fun Modifier.hScroll(): Modifier = this.horizontalScroll(rememberScrollState())
 
 @Composable
-fun AddPanel(onAdd: (LayerKind) -> Unit) {
+fun AddPanel(onAdd: (LayerKind) -> Unit, onLibrary: () -> Unit) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = onLibrary, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.add_from_library)) }
         Button(onClick = { onAdd(LayerKind.Ellipse) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.add_ellipse)) }
         Button(onClick = { onAdd(LayerKind.Rect) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.add_rect)) }
-        Text(stringResource(R.string.add_note), style = MaterialTheme.typography.bodySmall)
     }
 }
 

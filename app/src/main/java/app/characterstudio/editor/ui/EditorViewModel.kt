@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.characterstudio.CharacterStudioApp
+import app.characterstudio.assets.AssetEntity
 import app.characterstudio.data.ProjectRepository
 import app.characterstudio.editor.model.*
 import java.util.UUID
@@ -117,6 +118,11 @@ class EditorViewModel(private val repo: ProjectRepository, private val projectId
     fun addShape(kind: LayerKind, name: String) {
         val id = UUID.randomUUID().toString()
         commit { SceneOps.addLayer(it, id, name, kind) }
+        _selected.value = id
+    }
+    fun addAssetLayer(asset: AssetEntity, file: String) {
+        val id = UUID.randomUUID().toString()
+        commit { SceneOps.addAssetLayer(it, id, asset.nameAr, asset.assetId, asset.version, file, asset.width, asset.height) }
         _selected.value = id
     }
     fun deleteLayer(id: String) = commit { SceneOps.deleteLayer(it, id) }

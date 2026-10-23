@@ -17,6 +17,17 @@ object SceneOps {
         return s.copy(layers = s.layers + Layer(id = id, name = name, kind = kind, transform = t, home = t))
     }
 
+    /** طبقة من أصل المكتبة: تُصغَّر لتتسع في نصف اللوحة كحد أقصى مع الحفاظ على النسبة. */
+    fun addAssetLayer(s: Scene, id: String, name: String, assetId: String, version: Int, file: String, imgW: Int, imgH: Int): Scene {
+        val maxSide = minOf(s.canvasWidth, s.canvasHeight) * 0.5f
+        val k = minOf(1f, maxSide / imgW, maxSide / imgH)
+        val t = Transform(s.canvasWidth / 2f, s.canvasHeight / 2f, (imgW * k).coerceAtLeast(MIN_SIZE), (imgH * k).coerceAtLeast(MIN_SIZE), 0f)
+        return s.copy(layers = s.layers + Layer(
+            id = id, name = name, kind = LayerKind.Asset, assetId = assetId, assetVersion = version, assetFile = file,
+            transform = t, home = t,
+        ))
+    }
+
     fun deleteLayer(s: Scene, id: String) = s.copy(layers = s.layers.filterNot { it.id == id })
 
     fun duplicateLayer(s: Scene, id: String, newId: String, name: String): Scene {
@@ -118,7 +129,7 @@ object SceneOps {
             val hw = t.width / 2f
             val hh = t.height / 2f
             val inside = when (l.kind) {
-                LayerKind.Rect -> abs(lx) <= hw && abs(ly) <= hh
+                LayerKind.Rect, LayerKind.Asset -> abs(lx) <= hw && abs(ly) <= hh
                 LayerKind.Ellipse -> (lx / hw) * (lx / hw) + (ly / hh) * (ly / hh) <= 1f
             }
             if (inside) return l.id

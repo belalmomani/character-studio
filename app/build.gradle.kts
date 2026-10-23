@@ -16,6 +16,11 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        // قيم عامة تُحقن وقت البناء من GitHub Actions Variables (ليست أسرارًا: المفتاح anon عام بتصميمه).
+        fun env(name: String) = (System.getenv(name) ?: "").replace("\"", "")
+        buildConfigField("String", "SUPABASE_URL", "\"${env("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${env("SUPABASE_ANON_KEY")}\"")
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${env("CLOUDINARY_CLOUD_NAME")}\"")
     }
     signingConfigs {
         // مفتاح debug ثابت داخل المستودع عمدًا: كل بناء يُوقَّع بالتوقيع نفسه فيُحدَّث التطبيق فوق السابق.
@@ -49,7 +54,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }

@@ -9,6 +9,7 @@ const val SCENE_VERSION = 1
 enum class LayerKind {
     @SerialName("ellipse") Ellipse,
     @SerialName("rect") Rect,
+    @SerialName("asset") Asset,
 }
 
 /** x,y = مركز العنصر بوحدات اللوحة؛ rotation بالدرجات. */
@@ -22,6 +23,8 @@ data class Layer(
     val kind: LayerKind,
     val assetId: String? = null,
     val assetVersion: Int? = null,
+    /** اسم ملف نسخة الأصل المحفوظة محليًا (مستقلة عن ذاكرة المكتبة المؤقتة). */
+    val assetFile: String? = null,
     val transform: Transform,
     val home: Transform,
     val opacity: Float = 1f,
