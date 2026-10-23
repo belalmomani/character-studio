@@ -1,0 +1,11 @@
+*.jks
+*.keystore
+!app/debug.keystore
+local.properties
+.gradle/
+build/
+.idea/
+*.iml
+.env
+.env.*
+supabase/.temp/

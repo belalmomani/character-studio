@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة إدارة استوديو الشخصيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f5f4; --surface:#ffffff; --ink:#18232b; --muted:#5b6872; --line:#d9dfdd;
+    --primary:#0e6b66; --primary-ink:#ffffff; --danger:#b42318; --warn:#9a5b00; --ok:#1b6e3c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#10181c; --surface:#18242a; --ink:#e8eeee; --muted:#9db0b4; --line:#2b3b42;
+      --primary:#4cc2b9; --primary-ink:#06211f; --danger:#ff8a7a; --warn:#f0b35a; --ok:#6fd49a; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;
+    padding-top:env(safe-area-inset-top,0)}
+  header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+  header strong{font-size:1rem}
+  main{padding:16px 16px 96px;max-width:680px;margin:0 auto}
+  h1{font-size:1.25rem;margin:8px 0 16px} h2{font-size:1.05rem;margin:0 0 8px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+  dl{margin:0}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row dt{color:var(--muted)} .row dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+  label{display:block;font-weight:600;margin:14px 0 4px}
+  input[type=email],input[type=password],input[type=number],input[type=text],input[type=url],select,textarea{
+    width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+  input[type=file]{width:100%;font:inherit}
+  .check{display:flex;align-items:center;gap:10px;margin:14px 0}
+  .check input{width:22px;height:22px}
+  button{font:inherit;font-weight:600;min-height:48px;padding:0 18px;border-radius:8px;border:1px solid var(--primary);
+    background:var(--primary);color:var(--primary-ink);cursor:pointer}
+  button.secondary{background:transparent;color:var(--primary)}
+  button.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+  button.small{min-height:40px;padding:0 12px;font-size:.92rem}
+  button:disabled{opacity:.55}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  :focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+  .hint{color:var(--muted);font-size:.9rem}
+  .msg{padding:10px 12px;border-radius:8px;margin:12px 0;border:1px solid var(--line)}
+  .msg.err{color:var(--danger);border-color:var(--danger)} .msg.ok{color:var(--ok);border-color:var(--ok)}
+  .msg.warn{color:var(--warn);border-color:var(--warn)}
+  nav{position:fixed;inset:auto 0 0 0;display:flex;background:var(--surface);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom,0)}
+  nav button{flex:1;border:0;border-radius:0;background:transparent;color:var(--muted);min-height:56px;padding:0 4px;font-size:.9rem}
+  nav button[aria-current=page]{color:var(--primary);box-shadow:inset 0 3px 0 var(--primary)}
+  .log{font-size:.92rem;border-bottom:1px solid var(--line);padding:10px 0}
+  .log:last-child{border-bottom:0} .log small{color:var(--muted);display:block}
+  .card{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .card:last-child{border-bottom:0}
+  .thumb{width:72px;height:72px;flex:none;border-radius:8px;border:1px solid var(--line);object-fit:contain;
+    background:repeating-conic-gradient(#e6e6e6 0 25%,#fff 0 50%) 0 0/16px 16px}
+  .card .body{flex:1;min-width:0}
+  .card .title{font-weight:600}
+  .badge{display:inline-block;padding:0 8px;border-radius:999px;border:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+  .badge.published{color:var(--ok);border-color:var(--ok)} .badge.pending{color:var(--warn);border-color:var(--warn)}
+  .badge.rejected{color:var(--danger);border-color:var(--danger)}
+  details{margin-top:8px} summary{cursor:pointer;color:var(--primary);min-height:40px;display:flex;align-items:center}
+  .stage{position:relative;display:inline-block;max-width:100%;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+    background:repeating-conic-gradient(#e6e6e6 0 25%,#fff 0 50%) 0 0/16px 16px;touch-action:manipulation}
+  .stage img{display:block;max-width:100%;height:auto}
+  .dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#e91e63;border:2px solid #fff;box-shadow:0 0 0 1px #0006;pointer-events:none}
+  .box{position:absolute;border:2px solid var(--primary);background:#0e6b6633;pointer-events:none}
+  .box.off{border-style:dashed;opacity:.45} .box.live{border-style:dotted;border-color:#e91e63;background:#e91e6322}
+  .lbl{position:absolute;top:0;left:0;background:var(--primary);color:var(--primary-ink);font-size:11px;padding:0 4px;line-height:1.5}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><strong>لوحة إدارة استوديو الشخصيات</strong><button id="logout" class="secondary small" hidden>خروج</button></header>
+<main id="root"><p class="hint">جارٍ التحميل…</p></main>
+<nav id="nav" hidden aria-label="التنقل">
+  <button data-tab="dashboard">المعلومات</button>
+  <button data-tab="assets">الأصول</button>
+  <button data-tab="setup">الفئات</button>
+  <button data-tab="ads">الإعلانات</button>
+  <button data-tab="audit">السجل</button>
+</nav>
+<script src="config.js"></script>
+<script src="slice-core.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="admin.js"></script>
+<script src="slicer.js"></script>
+</body>
+</html>
