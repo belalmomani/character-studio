@@ -34,6 +34,12 @@ class AppContainer(context: Context) {
     val libraryConfigured: Boolean =
         BuildConfig.SUPABASE_URL.isNotEmpty() && BuildConfig.SUPABASE_ANON_KEY.isNotEmpty() && BuildConfig.CLOUDINARY_CLOUD_NAME.isNotEmpty()
     val cloudName: String = BuildConfig.CLOUDINARY_CLOUD_NAME
+    /** أسماء المتغيرات التي لم تُحقن في هذا البناء (الأسماء فقط، بلا قيم) لتشخيص إعداد CI. */
+    val missingConfig: List<String> = buildList {
+        if (BuildConfig.SUPABASE_URL.isEmpty()) add("SUPABASE_URL")
+        if (BuildConfig.SUPABASE_ANON_KEY.isEmpty()) add("SUPABASE_ANON_KEY")
+        if (BuildConfig.CLOUDINARY_CLOUD_NAME.isEmpty()) add("CLOUDINARY_CLOUD_NAME")
+    }
 
     /** الحسابات تحتاج SUPABASE_URL وSUPABASE_ANON_KEY فقط. */
     val supabaseConfigured: Boolean = BuildConfig.SUPABASE_URL.isNotEmpty() && BuildConfig.SUPABASE_ANON_KEY.isNotEmpty()

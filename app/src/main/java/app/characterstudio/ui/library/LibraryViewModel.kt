@@ -35,6 +35,7 @@ class LibraryViewModel(
     private val account: AccountRepository,
     val configured: Boolean,
     val cloudName: String,
+    val missing: List<String> = emptyList(),
 ) : ViewModel() {
     private val _filter = MutableStateFlow(AssetFilter())
     val filter: StateFlow<AssetFilter> = _filter
@@ -80,7 +81,7 @@ class LibraryViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as CharacterStudioApp).container
-                LibraryViewModel(c.assets, c.account, c.libraryConfigured, c.cloudName)
+                LibraryViewModel(c.assets, c.account, c.libraryConfigured, c.cloudName, c.missingConfig)
             }
         }
     }

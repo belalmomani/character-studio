@@ -69,6 +69,10 @@ fun AssetLibraryContent(vm: LibraryViewModel, onClose: () -> Unit, onPick: ((Ass
             if (!vm.configured) {
                 Text(stringResource(R.string.library_not_configured), color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(vertical = 12.dp))
+                if (vm.missing.isNotEmpty()) {
+                    Text(stringResource(R.string.library_not_configured_missing, vm.missing.joinToString("، ")),
+                        style = MaterialTheme.typography.bodySmall)
+                }
             }
             OutlinedTextField(
                 value = filter.query, onValueChange = vm::setQuery, singleLine = true,
