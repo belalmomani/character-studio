@@ -10,6 +10,10 @@ import app.characterstudio.assets.AssetEntity
 import app.characterstudio.assets.AssetFilter
 import app.characterstudio.assets.AssetRepository
 import app.characterstudio.assets.CategoryEntity
+import app.characterstudio.auth.AccountRepository
+import app.characterstudio.auth.AuthState
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +32,7 @@ sealed interface SyncUi {
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibraryViewModel(
     private val repo: AssetRepository,
+    private val account: AccountRepository,
     val configured: Boolean,
     val cloudName: String,
 ) : ViewModel() {
@@ -42,10 +47,21 @@ class LibraryViewModel(
     val unlocked: StateFlow<Set<String>> = repo.unlockedIds()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
+    val signedIn: StateFlow<Boolean> = account.state.map { it is AuthState.SignedIn }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), account.state.value is AuthState.SignedIn)
+
     private val _sync = MutableStateFlow<SyncUi>(SyncUi.Idle)
     val sync: StateFlow<SyncUi> = _sync
 
-    init { if (configured) sync() }
+    init {
+        if (configured) sync()
+        // الدخول/الخروج يغيّر الأصول المفتوحة، فنحدّث المكتبة
+        viewModelScope.launch { account.state.drop(1).collect { if (configured) sync() } }
+    }
+
+    /** فتح أصل مدفوع: الخادم يتحقق من الرصيد ويخصم مرة واحدة؛ نحدّث الحالة المحلية بعد تأكيده فقط. */
+    suspend fun unlock(asset: AssetEntity): Result<Int> =
+        account.unlock(asset.assetId).onSuccess { repo.markUnlocked(asset.assetId) }
 
     fun setQuery(q: String) { _filter.value = _filter.value.copy(query = q) }
     fun setCategory(id: String?) { _filter.value = _filter.value.copy(categoryId = id) }
@@ -64,7 +80,7 @@ class LibraryViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as CharacterStudioApp).container
-                LibraryViewModel(c.assets, c.libraryConfigured, c.cloudName)
+                LibraryViewModel(c.assets, c.account, c.libraryConfigured, c.cloudName)
             }
         }
     }

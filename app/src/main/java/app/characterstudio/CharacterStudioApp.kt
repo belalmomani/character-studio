@@ -3,6 +3,11 @@ package app.characterstudio
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
+import app.characterstudio.auth.AccountRepository
+import app.characterstudio.auth.AuthRepository
+import app.characterstudio.auth.SecureSessionStore
+import app.characterstudio.auth.SupabaseAccountApi
+import app.characterstudio.auth.SupabaseAuthApi
 import app.characterstudio.assets.AssetDatabase
 import app.characterstudio.assets.AssetFiles
 import app.characterstudio.assets.AssetImageStore
@@ -30,12 +35,23 @@ class AppContainer(context: Context) {
         BuildConfig.SUPABASE_URL.isNotEmpty() && BuildConfig.SUPABASE_ANON_KEY.isNotEmpty() && BuildConfig.CLOUDINARY_CLOUD_NAME.isNotEmpty()
     val cloudName: String = BuildConfig.CLOUDINARY_CLOUD_NAME
 
+    /** الحسابات تحتاج SUPABASE_URL وSUPABASE_ANON_KEY فقط. */
+    val supabaseConfigured: Boolean = BuildConfig.SUPABASE_URL.isNotEmpty() && BuildConfig.SUPABASE_ANON_KEY.isNotEmpty()
+    val authRepo: AuthRepository = AuthRepository(
+        api = if (supabaseConfigured) SupabaseAuthApi(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) else null,
+        store = SecureSessionStore(context.applicationContext),
+    )
+    val account: AccountRepository = AccountRepository(
+        authRepo,
+        if (supabaseConfigured) SupabaseAccountApi(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) else null,
+    )
+
     val assetFiles = AssetFiles(context.applicationContext, BuildConfig.CLOUDINARY_CLOUD_NAME)
     val imageStore = AssetImageStore(assetFiles)
     val assets: AssetRepository by lazy {
         AssetRepository(
             assetDb.assetDao(),
-            remote = if (libraryConfigured) SupabaseAssetRemote(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) else null,
+            remote = if (libraryConfigured) SupabaseAssetRemote(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) { authRepo.accessToken() } else null,
             appVersion = BuildConfig.VERSION_CODE,
         )
     }

@@ -11,13 +11,19 @@
 `node admin-web/tests/slice-core.test.js` (16 اختبارًا، ينفَّذ أيضًا في GitHub Actions).
 
 ## الإعداد (مرة واحدة، من متصفح الهاتف)
-1. Supabase → SQL Editor: شغّل الملف المجمَّع (0002-0005) ثم `0006_admin_assets.sql`.
-2. Supabase → Authentication → Users → Add user: أنشئ حسابك (bilalalmomani90@gmail.com) بكلمة مرور قوية وأكّد البريد، ثم شغّل `seed_admin.sql`.
-3. Cloudinary: أنشئ حسابًا مجانيًا، وانسخ Cloud name وAPI Key وAPI Secret من Dashboard (السر لا يُرسل لأحد ولا يوضع في config.js).
-4. Supabase → Edge Functions → Deploy a new function باسم `sign-upload` (Via Editor) والصق محتوى `backend/supabase/functions/sign-upload/index.ts`.
-   ثم Edge Functions → Secrets وأضف: `CLOUDINARY_CLOUD_NAME` و`CLOUDINARY_API_KEY` و`CLOUDINARY_API_SECRET`.
-5. عدّل `admin-web/config.js`: SUPABASE_URL والمفتاح العام anon/publishable واسم سحابة Cloudinary. لا تضع service_role.
-6. استضف مجلد admin-web على Cloudflare Pages أو Netlify (رفع ملفات ثابتة) وافتح الرابط من الهاتف.
+1. Supabase → SQL Editor: شغّل `backend/supabase/ALL_IN_ONE.sql` (يشمل كل الهجرات ودور المسؤول).
+2. Supabase → Authentication → Users → Add user: أنشئ حسابك (bilalalmomani90@gmail.com) بكلمة مرور قوية مع **Auto Confirm User**.
+   ثم أعد تشغيل مقطع «منح دور المسؤول» من الملف نفسه (أو الاستعلام الذي أعطيتك إياه).
+3. Cloudinary: أنشئ حسابًا مجانيًا وانسخ Cloud name وAPI Key وAPI Secret (السر لا يُرسل لأحد ولا يوضع في الصفحة).
+4. رفع الأصول — اختر طريقة واحدة:
+   - **الأفضل (آمنة):** Supabase → Edge Functions → Deploy a new function باسم `sign-upload` (Via Editor) والصق `backend/supabase/functions/sign-upload/index.ts`،
+     ثم Secrets: `CLOUDINARY_CLOUD_NAME` و`CLOUDINARY_API_KEY` و`CLOUDINARY_API_SECRET`.
+   - **أبسط (أقل أمانًا):** في Cloudinary → Settings → Upload → Upload presets: أنشئ preset من نوع **Unsigned** (مجلد `characterstudio/assets`، صيغ png وwebp فقط، حجم أقصى 5MB)،
+     وضع اسمه في صفحة الإعداد. أي شخص يعرف اسم السحابة والـ preset يستطيع الرفع إلى حسابك، لذلك احتفظ بهما سرًّا وانتقل للطريقة الأولى لاحقًا.
+5. استضف الملف الواحد `admin-web/dist/admin-standalone.html` (أو المجلد كله) على Cloudflare Pages أو Netlify (رفع ملفات)، وافتح الرابط.
+   **لا حاجة لتعديل أي ملف:** تظهر صفحة «إعداد الاتصال» عند أول فتح، فأدخل Project URL والمفتاح العام (anon/publishable) واسم سحابة Cloudinary.
+   الصفحة ترفض مفاتيح service_role/secret تلقائيًا، وتحفظ القيم في هذا المتصفح فقط.
+   (بديل: تعبئتها في config.js. ولإعادة بناء الملف الواحد بعد أي تعديل: `python3 admin-web/build-standalone.py`.)
 
 ## ترتيب العمل لنشر أول أصل
 الفئات (إضافة الأساسية) ← ترخيص (مع علامة «تجاري مسموح») ثم «اعتماد» ← الأصول ← إضافة أصل ← «نشر».

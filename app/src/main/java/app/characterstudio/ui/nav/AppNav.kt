@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import app.characterstudio.editor.ui.EditorScreen
 import app.characterstudio.export.ExportScreen
 import app.characterstudio.ui.home.HomeScreen
+import app.characterstudio.ui.account.AccountScreen
+import app.characterstudio.ui.account.AccountViewModel
 import app.characterstudio.ui.info.InfoScreen
 import app.characterstudio.ui.library.AssetLibraryContent
 import app.characterstudio.ui.library.LibraryViewModel
@@ -23,6 +25,7 @@ object Routes {
     const val NEW = "new"
     const val SETTINGS = "settings"
     const val LIBRARY = "library"
+    const val ACCOUNT = "account"
     const val INFO = "info/{kind}"
     fun info(kind: String) = "info/$kind"
     const val EDITOR = "editor/{projectId}"
@@ -41,6 +44,7 @@ fun AppNav() {
                 onNewCharacter = { nav.navigate(Routes.NEW) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onLibrary = { nav.navigate(Routes.LIBRARY) },
+                onAccount = { nav.navigate(Routes.ACCOUNT) },
             )
         }
         composable(Routes.PROJECTS) {
@@ -74,6 +78,10 @@ fun AppNav() {
         composable(Routes.LIBRARY) {
             val libVm: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory)
             AssetLibraryContent(vm = libVm, onClose = { nav.popBackStack() }, onPick = null)
+        }
+        composable(Routes.ACCOUNT) {
+            val accountVm: AccountViewModel = viewModel(factory = AccountViewModel.Factory)
+            AccountScreen(vm = accountVm, onBack = { nav.popBackStack() })
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(onBack = { nav.popBackStack() }, onInfo = { nav.navigate(Routes.info(it)) })

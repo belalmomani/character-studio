@@ -22,6 +22,9 @@ import app.characterstudio.R
 import app.characterstudio.assets.AssetEntity
 import app.characterstudio.assets.CloudinaryUrls
 import app.characterstudio.assets.ThumbnailLoader
+import app.characterstudio.auth.AccountError
+import app.characterstudio.auth.AccountException
+import kotlinx.coroutines.launch
 
 private val STYLE_LABELS = listOf(
     "realistic_2d" to R.string.style_realistic_2d, "cartoon" to R.string.style_cartoon,
@@ -38,7 +41,13 @@ fun AssetLibraryContent(vm: LibraryViewModel, onClose: () -> Unit, onPick: ((Ass
     val sync by vm.sync.collectAsStateWithLifecycle()
     val unlocked by vm.unlocked.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val paidMsg = stringResource(R.string.library_paid_needs_account)
+    val signedIn by vm.signedIn.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    var unlockTarget by remember { mutableStateOf<AssetEntity?>(null) }
+    val needLoginMsg = stringResource(R.string.library_need_login)
+    val unlockedMsg = stringResource(R.string.unlock_done)
+    val insufficientMsg = stringResource(R.string.unlock_insufficient)
+    val unlockFailedMsg = stringResource(R.string.unlock_failed)
     var pendingMsg by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(pendingMsg) { pendingMsg?.let { snackbar.showSnackbar(it); pendingMsg = null } }
 
@@ -63,7 +72,7 @@ fun AssetLibraryContent(vm: LibraryViewModel, onClose: () -> Unit, onPick: ((Ass
             }
             OutlinedTextField(
                 value = filter.query, onValueChange = vm::setQuery, singleLine = true,
-                label = { Text(stringResource(R.string.search_hint)) }, modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.library_search_hint)) }, modifier = Modifier.fillMaxWidth(),
             )
             Row(Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = filter.artStyle == null, onClick = { vm.setStyle(null) }, label = { Text(stringResource(R.string.library_all)) })
@@ -97,8 +106,8 @@ fun AssetLibraryContent(vm: LibraryViewModel, onClose: () -> Unit, onPick: ((Ass
                     items(assets, key = { it.assetId }) { a ->
                         val usable = a.accessLevel == "free" || a.assetId in unlocked
                         Card(onClick = { when {
-                            onPick == null -> Unit
-                            !usable -> pendingMsg = paidMsg
+                            !usable && !signedIn -> pendingMsg = needLoginMsg
+                            !usable -> unlockTarget = a
                             else -> onPick?.invoke(a)
                         } }) {
                             Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -116,6 +125,27 @@ fun AssetLibraryContent(vm: LibraryViewModel, onClose: () -> Unit, onPick: ((Ass
                 }
             }
         }
+    }
+
+    unlockTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { unlockTarget = null },
+            title = { Text(stringResource(R.string.unlock_title)) },
+            text = { Text(stringResource(R.string.unlock_body, target.nameAr, target.pointsCost)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    unlockTarget = null
+                    scope.launch {
+                        vm.unlock(target)
+                            .onSuccess { pendingMsg = unlockedMsg; onPick?.invoke(target) }
+                            .onFailure { e ->
+                                pendingMsg = if ((e as? AccountException)?.error == AccountError.InsufficientPoints) insufficientMsg else unlockFailedMsg
+                            }
+                    }
+                }) { Text(stringResource(R.string.unlock_confirm)) }
+            },
+            dismissButton = { TextButton(onClick = { unlockTarget = null }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 }
 

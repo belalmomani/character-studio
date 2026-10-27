@@ -2,14 +2,7 @@
 // أداة تقطيع صورة إلى أجزاء وإنشاء أصل مستقل لكل جزء. تعتمد على دوال admin.js (h, msg, show, field, sel, sb ...) وعلى SliceCore.
 
 async function uploadBlobToCloudinary(blob, w, ht) {
-  const { data: sig, error: se } = await sb.functions.invoke("sign-upload", { body: {} });
-  if (se || !sig || !sig.signature) throw new Error("تعذّر الحصول على توقيع الرفع. تحقق من الدالة sign-upload وأسرار Cloudinary.");
-  const fd = new FormData();
-  fd.append("file", blob, "slice.png"); fd.append("api_key", sig.api_key); fd.append("timestamp", sig.timestamp);
-  fd.append("signature", sig.signature); fd.append("public_id", sig.public_id); fd.append("allowed_formats", sig.allowed_formats);
-  const up = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(sig.cloud_name)}/image/upload`, { method: "POST", body: fd });
-  const res = await up.json();
-  if (!up.ok) throw new Error("فشل الرفع: " + ((res.error && res.error.message) || up.status));
+  const res = await uploadToCloudinary(blob, "slice.png");
   if (!["png", "webp"].includes(res.format) || res.bytes > MAX_BYTES || res.width !== w || res.height !== ht) {
     throw new Error("نتيجة الرفع لا تطابق الجزء (الصيغة/الحجم/الأبعاد).");
   }

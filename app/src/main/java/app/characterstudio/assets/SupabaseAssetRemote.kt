@@ -52,7 +52,12 @@ private data class AssetRow(
  * مصدر Supabase عبر REST بالمفتاح العام (anon) فقط. القراءة العامة مسموحة لما هو منشور (انظر 0007).
  * الأصول المفتوحة بالنقاط تحتاج حسابًا، لذلك fetchUnlockedIds يرجع قائمة فارغة حتى مرحلة الحسابات.
  */
-class SupabaseAssetRemote(baseUrl: String, private val anonKey: String) : AssetRemoteSource {
+class SupabaseAssetRemote(
+    baseUrl: String,
+    private val anonKey: String,
+    /** رمز المستخدم إن كان مسجَّلًا (لقراءة أصوله المفتوحة)، وإلا null. */
+    private val tokenProvider: suspend () -> String? = { null },
+) : AssetRemoteSource {
     private val base = baseUrl.trimEnd('/')
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -81,16 +86,22 @@ class SupabaseAssetRemote(baseUrl: String, private val anonKey: String) : AssetR
         }
     }
 
-    override suspend fun fetchUnlockedIds(): List<String> = emptyList()
+    @Serializable private data class UnlockRow(@SerialName("asset_id") val assetId: String)
 
-    private suspend fun request(method: String, path: String, body: String?): String = withContext(Dispatchers.IO) {
+    override suspend fun fetchUnlockedIds(): List<String> {
+        val token = tokenProvider() ?: return emptyList()
+        val body = request("GET", "/rest/v1/asset_unlocks?select=asset_id", null, token)
+        return json.decodeFromString<List<UnlockRow>>(body).map { it.assetId }
+    }
+
+    private suspend fun request(method: String, path: String, body: String?, userToken: String? = null): String = withContext(Dispatchers.IO) {
         val conn = URL(base + path).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = method
             conn.connectTimeout = 15_000
             conn.readTimeout = 30_000
             conn.setRequestProperty("apikey", anonKey)
-            conn.setRequestProperty("Authorization", "Bearer $anonKey")
+            conn.setRequestProperty("Authorization", "Bearer ${userToken ?: anonKey}")
             conn.setRequestProperty("Accept", "application/json")
             if (body != null) {
                 conn.doOutput = true

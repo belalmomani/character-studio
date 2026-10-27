@@ -36,6 +36,9 @@ class AssetRepository(
 
     suspend fun get(id: String): AssetEntity? = dao.get(id)
 
+    /** يُستدعى فقط بعد تأكيد الخادم لفتح الأصل. */
+    suspend fun markUnlocked(assetId: String) = dao.upsertUnlocked(listOf(AssetUnlockEntity(assetId)))
+
     /** هل يستطيع المستخدم استخدام الأصل الآن؟ (التحقق النهائي يبقى على الخادم). */
     fun canUse(asset: AssetEntity, unlocked: Set<String>): Boolean =
         asset.accessLevel == AssetAccess.FREE || asset.assetId in unlocked

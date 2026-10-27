@@ -1,5 +1,9 @@
 "use strict";
-const cfg = window.APP_CONFIG || {};
+const STORE_KEY = "cs_admin_cfg";
+const CFG_KEYS = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_UNSIGNED_PRESET"];
+function loadStored() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch (e) { return {}; } }
+// القيم من config.js إن وُجدت، وإلا ما أدخلته في صفحة الإعداد (محفوظ في هذا المتصفح فقط)
+const cfg = (() => { const f = window.APP_CONFIG || {}, st = loadStored(), o = {}; for (const k of CFG_KEYS) o[k] = f[k] || st[k] || ""; return o; })();
 const root = document.getElementById("root");
 const nav = document.getElementById("nav");
 const logoutBtn = document.getElementById("logout");
@@ -73,14 +77,79 @@ const thumb = (publicId, size = 160) => cfg.CLOUDINARY_CLOUD_NAME && publicId
   ? `https://res.cloudinary.com/${encodeURIComponent(cfg.CLOUDINARY_CLOUD_NAME)}/image/upload/c_limit,w_${size},h_${size}/${publicId}` : "";
 
 // ---------- الدخول ----------
-async function start() {
-  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
-    return show(h("h1", {}, "الإعداد غير مكتمل"), msg("افتح ملف config.js وأدخل SUPABASE_URL وSUPABASE_ANON_KEY (المفتاح العام فقط).", "warn"));
+function keyProblem(key) {
+  const k = (key || "").trim();
+  if (!k) return "أدخل المفتاح العام.";
+  if (k.startsWith("sb_secret_")) return "هذا مفتاح سري (secret). لا تستخدمه هنا أبدًا؛ استخدم المفتاح العام (publishable / anon).";
+  if (k.startsWith("sb_publishable_")) return null;
+  const parts = k.split(".");
+  if (parts.length === 3) {
+    try {
+      const p = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+      if (p.role === "service_role") return "هذا مفتاح service_role السري. لا تضعه هنا أبدًا.";
+      if (p.role === "anon") return null;
+    } catch (e) { /* يسقط إلى الرسالة العامة */ }
   }
+  return "صيغة المفتاح غير معروفة. انسخ المفتاح العام (anon / publishable) من Project Settings → API.";
+}
+const urlOk = (u) => /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test((u || "").trim());
+
+function connectView(error) {
+  const url = h("input", { type: "url", id: "cu", dir: "ltr", placeholder: "https://xxxx.supabase.co", value: cfg.SUPABASE_URL });
+  const key = h("input", { type: "text", id: "ck", dir: "ltr", placeholder: "sb_publishable_… أو eyJ…", value: cfg.SUPABASE_ANON_KEY, autocomplete: "off" });
+  const cloud = h("input", { type: "text", id: "cc", dir: "ltr", placeholder: "اسم سحابة Cloudinary", value: cfg.CLOUDINARY_CLOUD_NAME });
+  const preset = h("input", { type: "text", id: "cp", dir: "ltr", placeholder: "اتركه فارغًا (الأكثر أمانًا)", value: cfg.CLOUDINARY_UNSIGNED_PRESET });
+  const box = h("div");
+  const form = h("form", { class: "panel", onsubmit: (ev) => {
+    ev.preventDefault();
+    if (!urlOk(url.value)) return box.replaceChildren(msg("الرابط يجب أن يكون بالشكل https://xxxx.supabase.co", "err"));
+    const kp = keyProblem(key.value);
+    if (kp) return box.replaceChildren(msg(kp, "err"));
+    localStorage.setItem(STORE_KEY, JSON.stringify({ SUPABASE_URL: url.value.trim().replace(/\/$/, ""), SUPABASE_ANON_KEY: key.value.trim(),
+      CLOUDINARY_CLOUD_NAME: cloud.value.trim(), CLOUDINARY_UNSIGNED_PRESET: preset.value.trim() }));
+    location.reload();
+  } }, field("Project URL (من Supabase ← Project Settings ← API)", url), field("المفتاح العام (anon / publishable فقط)", key),
+    field("اسم سحابة Cloudinary (لازم لرفع الأصول وعرض صورها)", cloud),
+    field("Cloudinary unsigned preset (اختياري — بديل أقل أمانًا عن الدالة sign-upload)", preset), box,
+    h("p", {}, h("button", { type: "submit" }, "حفظ والمتابعة")));
+  nav.hidden = true; logoutBtn.hidden = true;
+  show(h("h1", {}, "إعداد الاتصال"), form,
+    msg("لا تضع مفتاح service_role أو أي مفتاح سري هنا. تُحفظ هذه القيم في هذا المتصفح فقط.", "warn"));
+  if (error) box.replaceChildren(msg(error, "err"));
+}
+
+async function start() {
+  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return connectView();
+  const kp = keyProblem(cfg.SUPABASE_ANON_KEY);
+  if (kp || !urlOk(cfg.SUPABASE_URL)) return connectView(kp || "رابط Supabase غير صحيح.");
   if (!window.supabase) return show(msg("تعذّر تحميل مكتبة Supabase. تحقق من الاتصال بالإنترنت.", "err"));
   sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
   const { data } = await sb.auth.getSession();
   return data.session ? enter() : loginView();
+}
+
+/** رفع صورة إلى Cloudinary: بتوقيع من الدالة sign-upload (الأفضل)، أو بـ unsigned preset إن حددته. */
+async function uploadToCloudinary(blob, filename) {
+  const fd = new FormData();
+  fd.append("file", blob, filename || "image");
+  let cloud;
+  if (cfg.CLOUDINARY_UNSIGNED_PRESET) {
+    cloud = cfg.CLOUDINARY_CLOUD_NAME;
+    if (!cloud) throw new Error("أدخل اسم سحابة Cloudinary في إعداد الاتصال.");
+    const id = (crypto.randomUUID ? crypto.randomUUID() : [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join(""));
+    fd.append("upload_preset", cfg.CLOUDINARY_UNSIGNED_PRESET);
+    fd.append("public_id", "characterstudio/assets/" + id);
+  } else {
+    const { data: sig, error: se } = await sb.functions.invoke("sign-upload", { body: {} });
+    if (se || !sig || !sig.signature) throw new Error("تعذّر الحصول على توقيع الرفع. انشر الدالة sign-upload وأضف أسرار Cloudinary، أو حدّد unsigned preset في إعداد الاتصال.");
+    cloud = sig.cloud_name;
+    fd.append("api_key", sig.api_key); fd.append("timestamp", sig.timestamp); fd.append("signature", sig.signature);
+    fd.append("public_id", sig.public_id); fd.append("allowed_formats", sig.allowed_formats);
+  }
+  const up = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloud)}/image/upload`, { method: "POST", body: fd });
+  const res = await up.json().catch(() => ({}));
+  if (!up.ok) throw new Error("فشل الرفع: " + ((res.error && res.error.message) || up.status));
+  return res;
 }
 
 function loginView(error) {
@@ -96,7 +165,8 @@ function loginView(error) {
     enter();
   } }, field("البريد الإلكتروني", email), field("كلمة المرور", pass), box, h("p", {}, btn));
   nav.hidden = true; logoutBtn.hidden = true;
-  show(h("h1", {}, "تسجيل الدخول"), form, h("p", { class: "hint" }, "الدخول للمسؤولين فقط. تُمنح الصلاحية من الخادم وليس من هذه الصفحة."));
+  show(h("h1", {}, "تسجيل الدخول"), form, h("p", { class: "hint" }, "الدخول للمسؤولين فقط. تُمنح الصلاحية من الخادم وليس من هذه الصفحة."),
+    h("button", { type: "button", class: "secondary small", onclick: () => { localStorage.removeItem(STORE_KEY); location.reload(); } }, "تغيير إعدادات الاتصال"));
   if (error) box.replaceChildren(msg(error, "err"));
 }
 
@@ -333,17 +403,8 @@ function assetForm(existing, cats, lics) {
       if (!w || w < 16 || ht < 16 || w > 4096 || ht > 4096) throw new Error("أبعاد الصورة يجب أن تكون بين 16 و4096 بكسل.");
       if (isNew && access.value === "paid" && !(parseInt(pts.value, 10) > 0)) throw new Error("الأصل المدفوع يحتاج تكلفة بالنقاط أكبر من 0.");
 
-      say("جارٍ طلب توقيع الرفع…");
-      const { data: sig, error: se } = await sb.functions.invoke("sign-upload", { body: {} });
-      if (se || !sig || !sig.signature) throw new Error("تعذّر الحصول على توقيع الرفع. تحقق من نشر الدالة sign-upload وأسرار Cloudinary.");
-
       say("جارٍ رفع الصورة إلى Cloudinary…");
-      const fd = new FormData();
-      fd.append("file", f); fd.append("api_key", sig.api_key); fd.append("timestamp", sig.timestamp);
-      fd.append("signature", sig.signature); fd.append("public_id", sig.public_id); fd.append("allowed_formats", sig.allowed_formats);
-      const up = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(sig.cloud_name)}/image/upload`, { method: "POST", body: fd });
-      const res = await up.json();
-      if (!up.ok) throw new Error("فشل الرفع: " + ((res.error && res.error.message) || up.status));
+      const res = await uploadToCloudinary(f, f.name);
       if (!["png", "webp"].includes(res.format) || res.bytes > MAX_BYTES || res.width !== w || res.height !== ht) {
         throw new Error("نتيجة الرفع لا تطابق الملف (الصيغة/الحجم/الأبعاد). لم يُنشأ الأصل.");
       }
