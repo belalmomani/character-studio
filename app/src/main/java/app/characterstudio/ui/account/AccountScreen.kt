@@ -48,7 +48,7 @@ fun AccountScreen(vm: AccountViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SignedOutForm(vm: AccountViewModel, busy: Boolean) {
+private fun ColumnScope.SignedOutForm(vm: AccountViewModel, busy: Boolean) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     Text(stringResource(R.string.account_intro), style = MaterialTheme.typography.bodyMedium)
@@ -67,7 +67,7 @@ private fun SignedOutForm(vm: AccountViewModel, busy: Boolean) {
 }
 
 @Composable
-private fun SignedInView(vm: AccountViewModel, a: AuthState.SignedIn, ui: AccountUi) {
+private fun ColumnScope.SignedInView(vm: AccountViewModel, a: AuthState.SignedIn, ui: AccountUi) {
     Text(a.email, style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
