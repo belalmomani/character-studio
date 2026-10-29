@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">استوديو تصميم الشخصيات</string>
+    <string name="home_title">Character Studio</string>
+    <string name="home_subtitle">صمّم شخصياتك واحفظها وعدّلها في أي وقت</string>
+    <string name="home_new_character">شخصية جديدة</string>
+    <string name="home_new_character_desc">ابدأ مشروعًا جديدًا بنمط فني تختاره</string>
+    <string name="home_my_projects">مشاريعي</string>
+    <string name="home_my_projects_desc">افتح مشاريعك المحفوظة على الجهاز</string>
+    <string name="back">رجوع</string>
+    <string name="projects_title">مشاريعي</string>
+    <string name="search_hint">ابحث عن مشروع</string>
+    <string name="sort_recent">الأحدث تعديلًا</string>
+    <string name="sort_name">الاسم</string>
+    <string name="empty_projects_title">لا توجد مشاريع بعد</string>
+    <string name="empty_projects_body">أنشئ أول شخصية لتظهر هنا.</string>
+    <string name="empty_search">لا توجد نتائج مطابقة للبحث.</string>
+    <string name="menu_rename">إعادة تسمية</string>
+    <string name="menu_duplicate">تكرار</string>
+    <string name="menu_delete">حذف</string>
+    <string name="more_options">خيارات</string>
+    <string name="rename_title">إعادة تسمية المشروع</string>
+    <string name="delete_title">حذف المشروع؟</string>
+    <string name="delete_body">سيُحذف المشروع «%1$s» من هذا الجهاز نهائيًا.</string>
+    <string name="confirm">تأكيد</string>
+    <string name="cancel">إلغاء</string>
+    <string name="duplicate_suffix">(نسخة)</string>
+    <string name="project_updated">آخر تعديل: %1$s</string>
+    <string name="new_title">شخصية جديدة</string>
+    <string name="field_project_name">اسم المشروع</string>
+    <string name="field_art_style">النمط الفني</string>
+    <string name="style_realistic_2d">واقعي ثنائي الأبعاد</string>
+    <string name="style_cartoon">كرتوني</string>
+    <string name="style_anime">أنمي</string>
+    <string name="style_simple_game">ألعاب مبسّط</string>
+    <string name="create_project">إنشاء المشروع</string>
+    <string name="error_invalid_name">أدخل اسمًا من 1 إلى 60 حرفًا.</string>
+    <string name="error_generic">تعذّر تنفيذ العملية. حاول مرة أخرى.</string>
+</resources>

@@ -21,6 +21,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Check build configuration variables (names only, no values)
+        run: |
+          for v in SUPABASE_URL SUPABASE_ANON_KEY CLOUDINARY_CLOUD_NAME; do
+            val="${!v}"
+            if [ -n "$val" ]; then
+              echo "$v: SET (${#val} characters)"
+            else
+              echo "::warning title=$v is EMPTY::Add it under Settings > Secrets and variables > Actions > Variables (repository variable, not Secret)."
+            fi
+          done
       - name: Unit tests and debug APK
         run: gradle :app:testDebugUnitTest :app:assembleDebug --stacktrace
       - name: Show debug signing fingerprints
