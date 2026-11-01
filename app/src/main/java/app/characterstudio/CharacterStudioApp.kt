@@ -14,6 +14,14 @@ import app.characterstudio.assets.AssetImageStore
 import app.characterstudio.assets.SupabaseAssetRemote
 import app.characterstudio.assets.AssetRepository
 import app.characterstudio.data.AppDatabase
+import app.characterstudio.data.ProjectEntity
+import app.characterstudio.editor.model.SceneJson
+import app.characterstudio.sync.DaoProjectStore
+import app.characterstudio.sync.ProjectSyncEngine
+import app.characterstudio.sync.ProjectSyncService
+import app.characterstudio.sync.RoomSyncStateStore
+import app.characterstudio.sync.SupabaseCloudProjects
+import app.characterstudio.sync.SyncDatabase
 import app.characterstudio.data.ProjectRepository
 import app.characterstudio.settings.DailyReminder
 import app.characterstudio.settings.SettingsStore
@@ -30,6 +38,24 @@ class AppContainer(context: Context) {
             .fallbackToDestructiveMigration()
             .build()
     }
+    private val syncDb by lazy {
+        Room.databaseBuilder(context.applicationContext, SyncDatabase::class.java, "sync_state.db")
+            .fallbackToDestructiveMigration() // فقدانها آمن: لا حذف للمشاريع، فقط نحتفظ بالنسختين عند أول تعارض
+            .build()
+    }
+
+    /** يستعيد ملفات الأصول لمشروع نُزِّل من السحابة إن كانت نسخة الأصل الحالية هي نفسها المستخدمة. */
+    private suspend fun restoreAssetsFor(p: ProjectEntity) {
+        val scene = runCatching { SceneJson.decode(p.documentJson) }.getOrNull() ?: return
+        for (l in scene.layers) runCatching {
+            val file = l.assetFile ?: return@runCatching
+            val id = l.assetId ?: return@runCatching
+            if (assetFiles.fileOf(file).exists()) return@runCatching
+            val a = assets.get(id) ?: return@runCatching
+            if (a.version == l.assetVersion) assetFiles.ensureLocal(a)
+        }
+    }
+
     /** هل ضُبط الخادم وقت البناء؟ (SUPABASE_URL وSUPABASE_ANON_KEY وCLOUDINARY_CLOUD_NAME) */
     val libraryConfigured: Boolean =
         BuildConfig.SUPABASE_URL.isNotEmpty() && BuildConfig.SUPABASE_ANON_KEY.isNotEmpty() && BuildConfig.CLOUDINARY_CLOUD_NAME.isNotEmpty()
@@ -59,6 +85,18 @@ class AppContainer(context: Context) {
             assetDb.assetDao(),
             remote = if (libraryConfigured) SupabaseAssetRemote(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) { authRepo.accessToken() } else null,
             appVersion = BuildConfig.VERSION_CODE,
+        )
+    }
+
+    val syncService: ProjectSyncService = ProjectSyncService(
+        authRepo, context.applicationContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE),
+    ) { userId ->
+        if (!supabaseConfigured) null else ProjectSyncEngine(
+            local = DaoProjectStore(db.projectDao()),
+            states = RoomSyncStateStore(syncDb.dao(), userId),
+            cloud = SupabaseCloudProjects(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) { authRepo.accessToken() },
+            copySuffix = context.getString(R.string.sync_copy_suffix),
+            onPulled = { restoreAssetsFor(it) },
         )
     }
 }

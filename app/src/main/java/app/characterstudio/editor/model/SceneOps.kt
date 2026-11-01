@@ -18,12 +18,16 @@ object SceneOps {
     }
 
     /** طبقة من أصل المكتبة: تُصغَّر لتتسع في نصف اللوحة كحد أقصى مع الحفاظ على النسبة. */
-    fun addAssetLayer(s: Scene, id: String, name: String, assetId: String, version: Int, file: String, imgW: Int, imgH: Int): Scene {
+    fun addAssetLayer(
+        s: Scene, id: String, name: String, assetId: String, version: Int, file: String, imgW: Int, imgH: Int,
+        anchors: List<AssetAnchor> = emptyList(),
+    ): Scene {
         val maxSide = minOf(s.canvasWidth, s.canvasHeight) * 0.5f
         val k = minOf(1f, maxSide / imgW, maxSide / imgH)
         val t = Transform(s.canvasWidth / 2f, s.canvasHeight / 2f, (imgW * k).coerceAtLeast(MIN_SIZE), (imgH * k).coerceAtLeast(MIN_SIZE), 0f)
         return s.copy(layers = s.layers + Layer(
             id = id, name = name, kind = LayerKind.Asset, assetId = assetId, assetVersion = version, assetFile = file,
+            srcWidth = imgW, srcHeight = imgH, assetAnchors = anchors,
             transform = t, home = t,
         ))
     }
@@ -78,6 +82,31 @@ object SceneOps {
     }
 
     fun resetLayer(s: Scene, id: String) = edit(s, id) { it.copy(transform = it.home, attachedAnchorId = null) }
+
+    /** نقاط تثبيت الأصل التي لها مقابل في الهيكل المرجعي الحالي. */
+    fun matchingAnchors(s: Scene, l: Layer): List<AssetAnchor> =
+        l.assetAnchors.filter { a -> s.anchors.any { it.id == a.id } }
+
+    /**
+     * يحرّك العنصر بحيث تنطبق نقطة تثبيت الأصل (بمعرّف anchorId) على نقطة الهيكل المرجعي ذات المعرّف نفسه،
+     * مع مراعاة حجم العنصر الحالي ودورانه. لا يغيّر الحجم ولا الدوران.
+     */
+    fun snapAssetAnchor(s: Scene, layerId: String, anchorId: String): Scene {
+        val l = s.layers.firstOrNull { it.id == layerId } ?: return s
+        val a = l.assetAnchors.firstOrNull { it.id == anchorId } ?: return s
+        val target = s.anchors.firstOrNull { it.id == anchorId } ?: return s
+        val sw = l.srcWidth ?: return s
+        val sh = l.srcHeight ?: return s
+        if (sw <= 0 || sh <= 0) return s
+        val t = l.transform
+        val dx = (a.x / sw - 0.5f) * t.width
+        val dy = (a.y / sh - 0.5f) * t.height
+        val rad = t.rotation * PI.toFloat() / 180f
+        val ox = dx * cos(rad) - dy * sin(rad)
+        val oy = dx * sin(rad) + dy * cos(rad)
+        val moved = setTransform(s, layerId) { it.copy(x = target.x - ox, y = target.y - oy) }
+        return edit(moved, layerId) { it.copy(attachedAnchorId = anchorId) }
+    }
 
     fun nearestAnchor(s: Scene, x: Float, y: Float, radius: Float = Float.MAX_VALUE): Anchor? =
         s.anchors.map { it to dist(it.x, it.y, x, y) }.filter { it.second <= radius }.minByOrNull { it.second }?.first

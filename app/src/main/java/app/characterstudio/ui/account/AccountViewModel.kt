@@ -15,6 +15,10 @@ import app.characterstudio.auth.AuthState
 import app.characterstudio.auth.AuthValidation
 import app.characterstudio.auth.PointTx
 import app.characterstudio.auth.SignUpOutcome
+import app.characterstudio.sync.ProjectSyncService
+import app.characterstudio.sync.SyncCounts
+import app.characterstudio.sync.SyncError
+import app.characterstudio.sync.SyncException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -26,13 +30,17 @@ data class AccountUi(
     val balance: Int? = null,
     val walletFailed: Boolean = false,
     val txs: List<PointTx> = emptyList(),
+    val syncBusy: Boolean = false,
+    val syncSummary: SyncCounts? = null,
 )
 
 class AccountViewModel(
     private val auth: AuthRepository,
     private val account: AccountRepository,
+    private val sync: ProjectSyncService,
     val configured: Boolean,
 ) : ViewModel() {
+    val syncEnabled: StateFlow<Boolean> = sync.enabled
     val authState: StateFlow<AuthState> = auth.state
     private val _ui = MutableStateFlow(AccountUi())
     val ui: StateFlow<AccountUi> = _ui
@@ -106,13 +114,38 @@ class AccountViewModel(
         }
     }
 
+    fun setSync(enabled: Boolean) {
+        sync.setEnabled(enabled)
+        if (enabled) syncNow()
+    }
+
+    fun syncNow() {
+        if (_ui.value.syncBusy) return
+        _ui.update { it.copy(syncBusy = true) }
+        viewModelScope.launch {
+            val r = sync.syncNow()
+            _ui.update {
+                it.copy(
+                    syncBusy = false, syncSummary = r.getOrNull() ?: it.syncSummary,
+                    message = when ((r.exceptionOrNull() as? SyncException)?.error) {
+                        null -> if (r.isFailure) R.string.sync_err_unknown else null
+                        SyncError.Network -> R.string.sync_err_network
+                        SyncError.NotSignedIn -> R.string.sync_err_signin
+                        SyncError.NotConfigured -> R.string.auth_err_notconfig
+                        SyncError.Unknown -> R.string.sync_err_unknown
+                    },
+                )
+            }
+        }
+    }
+
     fun messageShown() { _ui.update { it.copy(message = null) } }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as CharacterStudioApp).container
-                AccountViewModel(c.authRepo, c.account, c.supabaseConfigured)
+                AccountViewModel(c.authRepo, c.account, c.syncService, c.supabaseConfigured)
             }
         }
     }

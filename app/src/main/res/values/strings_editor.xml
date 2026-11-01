@@ -79,6 +79,7 @@
     <string name="export_failed">فشل التصدير. تحقق من المساحة المتاحة وحاول مرة أخرى.</string>
     <string name="export_oom">الذاكرة لا تكفي لهذه الدقة. اختر دقة أقل.</string>
     <string name="library_search_hint">ابحث عن أصل</string>
+    <string name="props_snap_asset">تثبيت على الهيكل بنقطة الأصل:</string>
     <string name="library_title">مكتبة الأصول</string>
     <string name="library_refresh">تحديث</string>
     <string name="library_all">كل الأنماط</string>
@@ -139,4 +140,15 @@
     <string name="unlock_done">تم فتح الأصل.</string>
     <string name="unlock_insufficient">رصيدك لا يكفي لفتح هذا الأصل.</string>
     <string name="unlock_failed">تعذّر فتح الأصل. حاول مرة أخرى.</string>
+    <string name="sync_title">مزامنة مشاريعي مع حسابي</string>
+    <string name="sync_desc">اختيارية ومعطّلة افتراضيًا. عند تفعيلها تُحفظ نسخة من مشاريعك في حسابك لتفتحها على جهاز آخر. مشاريعك المحلية لا تُحذف عند الخروج أو التحديث.</string>
+    <string name="sync_now">مزامنة الآن</string>
+    <string name="sync_summary">رُفع %1$d • نُزّل %2$d • تعارضات %3$d (حُفظت النسختان) • حُذف من السحابة %4$d • فشل %5$d</string>
+    <string name="sync_confirm_title">تفعيل المزامنة؟</string>
+    <string name="sync_confirm_body">سيُرفع اسم كل مشروع وأشكاله وطبقاته إلى حسابك على خدمة Supabase. الصور نفسها لا تُرفع (تُسترجع من المكتبة). يمكنك إيقاف المزامنة في أي وقت، لكن ما رُفع يبقى في السحابة حتى تحذف المشروع ثم تزامن.</string>
+    <string name="sync_confirm_ok">تفعيل ومزامنة</string>
+    <string name="sync_copy_suffix">(من السحابة)</string>
+    <string name="sync_err_network">تعذّرت المزامنة: تحقق من الاتصال.</string>
+    <string name="sync_err_signin">سجّل الدخول أولًا لتتم المزامنة.</string>
+    <string name="sync_err_unknown">تعذّرت المزامنة. حاول مرة أخرى.</string>
 </resources>

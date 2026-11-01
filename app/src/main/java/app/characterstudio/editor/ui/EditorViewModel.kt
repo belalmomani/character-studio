@@ -122,7 +122,8 @@ class EditorViewModel(private val repo: ProjectRepository, private val projectId
     }
     fun addAssetLayer(asset: AssetEntity, file: String) {
         val id = UUID.randomUUID().toString()
-        commit { SceneOps.addAssetLayer(it, id, asset.nameAr, asset.assetId, asset.version, file, asset.width, asset.height) }
+        val anchors = AssetAnchors.parse(asset.anchorsJson)
+        commit { SceneOps.addAssetLayer(it, id, asset.nameAr, asset.assetId, asset.version, file, asset.width, asset.height, anchors) }
         _selected.value = id
     }
     fun deleteLayer(id: String) = commit { SceneOps.deleteLayer(it, id) }
@@ -137,6 +138,7 @@ class EditorViewModel(private val repo: ProjectRepository, private val projectId
     fun moveLayer(id: String, delta: Int) = commit { SceneOps.moveLayer(it, id, delta) }
     fun setColor(id: String, argb: Long) = commit { SceneOps.edit(it, id) { l -> l.copy(colorArgb = argb) } }
     fun resetLayer(id: String) = commit { SceneOps.resetLayer(it, id) }
+    fun snapAssetAnchor(layerId: String, anchorId: String) = commit { SceneOps.snapAssetAnchor(it, layerId, anchorId) }
     fun snapToAnchor(id: String) = commit { SceneOps.snapToNearestAnchor(it, id) }
 
     // ---- تعديلات حية (سحب/منزلقات) تُسجَّل حركة واحدة عند endLive

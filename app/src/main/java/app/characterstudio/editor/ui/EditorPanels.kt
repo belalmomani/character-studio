@@ -7,7 +7,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.zIndex
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +33,7 @@ import app.characterstudio.R
 import app.characterstudio.editor.model.Layer
 import app.characterstudio.editor.model.LayerKind
 import app.characterstudio.editor.model.Scene
+import app.characterstudio.editor.model.SceneOps
 import kotlin.math.roundToInt
 
 val PaletteColors = listOf(
@@ -75,18 +82,41 @@ fun LayersPanel(
         Text(stringResource(R.string.layers_empty), Modifier.padding(16.dp))
         return
     }
+    // سحب الصف بمقبض ≡ لتغيير ترتيب الطبقة: كل صف بارتفاع ثابت، والإزاحة تُقرَّب لأقرب موضع
+    val rowHeight = 104.dp
+    val stepPx = with(LocalDensity.current) { (rowHeight + 6.dp).toPx() }
+    var dragId by remember { mutableStateOf<String?>(null) }
+    var dragY by remember { mutableFloatStateOf(0f) }
     LazyColumn(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // الأعلى في القائمة = الأمامي في الرسم
         items(scene.layers.asReversed(), key = { it.id }) { l ->
             val sel = l.id == selectedId
             var menu by remember { mutableStateOf(false) }
             Card(
+                modifier = Modifier.fillMaxWidth().height(rowHeight)
+                    .zIndex(if (dragId == l.id) 1f else 0f)
+                    .offset { IntOffset(0, if (dragId == l.id) dragY.roundToInt() else 0) },
                 colors = CardDefaults.cardColors(
                     containerColor = if (sel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                 ),
             ) {
                 Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "≡", style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(end = 8.dp).pointerInput(l.id) {
+                                detectDragGestures(
+                                    onDragStart = { dragId = l.id; dragY = 0f },
+                                    onDrag = { change, amount -> change.consume(); dragY += amount.y },
+                                    onDragEnd = {
+                                        val steps = (dragY / stepPx).roundToInt()
+                                        if (steps != 0) vm.moveLayer(l.id, -steps) // نزولًا في القائمة = نحو الخلف
+                                        dragId = null; dragY = 0f
+                                    },
+                                    onDragCancel = { dragId = null; dragY = 0f },
+                                )
+                            },
+                        )
                         Box(Modifier.size(14.dp).clip(CircleShape).background(Color(l.colorArgb)).border(1.dp, Color.Gray, CircleShape))
                         Spacer(Modifier.width(8.dp))
                         Column(Modifier.weight(1f).clickable { vm.select(l.id) }.padding(vertical = 8.dp)) {
@@ -154,6 +184,16 @@ fun PropertiesPanel(scene: Scene, selectedId: String?, vm: EditorViewModel, onDe
         Text(stringResource(R.string.prop_color), style = MaterialTheme.typography.titleSmall)
         if (enabled) ColorRow(selected = l.colorArgb, onPick = { vm.setColor(l.id, it) })
 
+        val assetMatches = SceneOps.matchingAnchors(scene, l)
+        if (l.kind == LayerKind.Asset && assetMatches.isNotEmpty()) {
+            Text(stringResource(R.string.props_snap_asset), style = MaterialTheme.typography.titleSmall)
+            Row(Modifier.hScroll(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                assetMatches.forEach { a ->
+                    val label = scene.anchors.firstOrNull { it.id == a.id }?.label ?: a.id
+                    OutlinedButton(onClick = { vm.snapAssetAnchor(l.id, a.id) }, enabled = enabled) { Text(label) }
+                }
+            }
+        }
         l.attachedAnchorId?.let { aid ->
             val label = scene.anchors.firstOrNull { it.id == aid }?.label ?: aid
             Text(stringResource(R.string.prop_attached, label), style = MaterialTheme.typography.bodySmall)

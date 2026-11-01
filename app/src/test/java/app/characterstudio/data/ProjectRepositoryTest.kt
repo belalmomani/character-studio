@@ -10,6 +10,7 @@ import org.junit.Test
 private class FakeDao : ProjectDao {
     val items = MutableStateFlow<List<ProjectEntity>>(emptyList())
     override fun observeAll() = items
+    override suspend fun getAll() = items.value
     override suspend fun getById(id: String) = items.value.firstOrNull { it.id == id }
     override suspend fun insert(project: ProjectEntity) { items.value = items.value + project }
     override suspend fun update(project: ProjectEntity) {

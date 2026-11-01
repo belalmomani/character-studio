@@ -82,6 +82,7 @@ private fun ColumnScope.SignedInView(vm: AccountViewModel, a: AuthState.SignedIn
             Text(stringResource(R.string.points_note), style = MaterialTheme.typography.bodySmall)
         }
     }
+    SyncBlock(vm, ui)
     Text(stringResource(R.string.points_history), style = MaterialTheme.typography.titleSmall)
     if (ui.txs.isEmpty()) {
         Text(stringResource(R.string.points_history_empty), style = MaterialTheme.typography.bodySmall)
@@ -112,4 +113,34 @@ private fun TxRow(t: PointTx) {
         }
         Text((if (t.delta > 0) "+" else "") + t.delta, style = MaterialTheme.typography.titleSmall)
     }
+}
+
+@Composable
+private fun SyncBlock(vm: AccountViewModel, ui: AccountUi) {
+    val enabled by vm.syncEnabled.collectAsStateWithLifecycle()
+    var confirm by remember { mutableStateOf(false) }
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.sync_title), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                Switch(checked = enabled, onCheckedChange = { if (it) confirm = true else vm.setSync(false) })
+            }
+            Text(stringResource(R.string.sync_desc), style = MaterialTheme.typography.bodySmall)
+            if (enabled) {
+                OutlinedButton(onClick = vm::syncNow, enabled = !ui.syncBusy) { Text(stringResource(R.string.sync_now)) }
+                if (ui.syncBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                ui.syncSummary?.let { s ->
+                    Text(stringResource(R.string.sync_summary, s.uploaded, s.downloaded, s.conflicts, s.deletedInCloud, s.failed),
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+    if (confirm) AlertDialog(
+        onDismissRequest = { confirm = false },
+        title = { Text(stringResource(R.string.sync_confirm_title)) },
+        text = { Text(stringResource(R.string.sync_confirm_body)) },
+        confirmButton = { TextButton(onClick = { confirm = false; vm.setSync(true) }) { Text(stringResource(R.string.sync_confirm_ok)) } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.cancel)) } },
+    )
 }

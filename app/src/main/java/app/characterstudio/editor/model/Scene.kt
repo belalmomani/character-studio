@@ -12,6 +12,10 @@ enum class LayerKind {
     @SerialName("asset") Asset,
 }
 
+/** نقطة تثبيت داخل صورة الأصل (بكسلات الصورة الأصلية)، معرّفها يطابق معرّف نقطة في الهيكل المرجعي. */
+@Serializable
+data class AssetAnchor(val id: String, val x: Float, val y: Float)
+
 /** x,y = مركز العنصر بوحدات اللوحة؛ rotation بالدرجات. */
 @Serializable
 data class Transform(val x: Float, val y: Float, val width: Float, val height: Float, val rotation: Float = 0f)
@@ -25,6 +29,10 @@ data class Layer(
     val assetVersion: Int? = null,
     /** اسم ملف نسخة الأصل المحفوظة محليًا (مستقلة عن ذاكرة المكتبة المؤقتة). */
     val assetFile: String? = null,
+    /** أبعاد الصورة الأصلية ونقاط تثبيت الأصل وقت الإضافة (تُحفظ مع المشروع لتبقى صالحة إن تغيّر الأصل على الخادم). */
+    val srcWidth: Int? = null,
+    val srcHeight: Int? = null,
+    val assetAnchors: List<AssetAnchor> = emptyList(),
     val transform: Transform,
     val home: Transform,
     val opacity: Float = 1f,
