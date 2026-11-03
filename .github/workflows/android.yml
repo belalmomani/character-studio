@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HAS_RELEASE_KEY: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
-      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
-      CLOUDINARY_CLOUD_NAME: ${{ vars.CLOUDINARY_CLOUD_NAME }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY }}
+      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME || vars.CLOUDINARY_CLOUD_NAME }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -28,7 +28,7 @@ jobs:
             if [ -n "$val" ]; then
               echo "$v: SET (${#val} characters)"
             else
-              echo "::warning title=$v is EMPTY::Add it under Settings > Secrets and variables > Actions > Variables (repository variable, not Secret)."
+              echo "::warning title=$v is EMPTY::Add it under Settings > Secrets and variables > Actions as a REPOSITORY secret or repository variable (not an Environment secret)."
             fi
           done
       - name: Unit tests and debug APK

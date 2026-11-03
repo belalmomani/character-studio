@@ -1,5 +1,5 @@
 -- ============================================================================
--- Character Studio — كل قاعدة البيانات في ملف واحد (0001 إلى 0008 + المسؤول)
+-- Character Studio — كل قاعدة البيانات في ملف واحد (0001 إلى 0009 + المسؤول)
 -- شغّله كاملًا مرة واحدة في Supabase → SQL Editor.
 --
 -- تحذير: القسم (أ) يحذف أي نسخة سابقة من جداول ودوال المشروع (المشاريع المتزامنة، الأرصدة، سجل النقاط،
@@ -45,6 +45,8 @@ drop function if exists public.admin_create_asset(uuid, text, text, text, text, 
 drop function if exists public.admin_add_asset_version(uuid, jsonb) cascade;
 drop function if exists public.admin_review_license(uuid, boolean, text) cascade;
 drop function if exists public.sync_push_project(uuid, text, text, int, jsonb, timestamptz, timestamptz, int) cascade;
+drop function if exists public.get_payment_methods() cascade;
+drop function if exists public.cancel_my_order(uuid) cascade;
 drop function if exists public.spend_points(int, text, text) cascade;
 drop function if exists public.handle_new_user() cascade;
 drop function if exists public.is_admin() cascade;
@@ -1127,6 +1129,40 @@ begin
 end $$;
 revoke all on function public.sync_push_project(uuid, text, text, int, jsonb, timestamptz, timestamptz, int) from public, anon;
 grant execute on function public.sync_push_project(uuid, text, text, int, jsonb, timestamptz, timestamptz, int) to authenticated;
+
+-- ======================================================================
+-- (ب) 0009_payment_methods.sql
+-- ======================================================================
+-- يعتمد على 0005. لم يُشغَّل على قاعدة بيانات بعد.
+-- 1) get_payment_methods: يعرف التطبيق أي طرق دفع مفعّلة دون كشف إعدادات المسؤول (IBAN وغيره).
+-- 2) cancel_my_order: يلغي المستخدم طلبًا لم يبدأ دفعه (لم يُرسل إشعار تحويل ولم يُفتح عند المزود).
+
+create or replace function public.get_payment_methods() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare ps public.payment_settings%rowtype; bs public.bank_transfer_settings%rowtype;
+begin
+  if auth.uid() is null then raise exception 'not_authenticated'; end if;
+  select * into ps from public.payment_settings where id = 1;
+  select * into bs from public.bank_transfer_settings where id = 1;
+  return jsonb_build_object(
+    'card', coalesce(ps.card_enabled, false) and ps.card_provider is not null,
+    'bank_transfer', coalesce(bs.enabled, false)
+  );
+end $$;
+revoke all on function public.get_payment_methods() from public, anon;
+grant execute on function public.get_payment_methods() to authenticated;
+
+create or replace function public.cancel_my_order(p_order uuid) returns text
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.payment_orders set status = 'canceled'
+   where id = p_order and user_id = auth.uid() and status = 'created'
+     and not exists (select 1 from public.bank_transfer_submissions s where s.order_id = p_order);
+  if not found then raise exception 'order_not_cancelable'; end if;
+  return 'canceled';
+end $$;
+revoke all on function public.cancel_my_order(uuid) from public, anon;
+grant execute on function public.cancel_my_order(uuid) to authenticated;
 
 -- ======================================================================
 -- (ج) حسابات موجودة مسبقًا + منح دور المسؤول

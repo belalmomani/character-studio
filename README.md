@@ -20,7 +20,7 @@
 **لم يُبنَ المشروع ولم تُشغَّل الاختبارات** — أول تشغيل سيكون عبر GitHub Actions (انظر أدناه).
 
 ## ربط التطبيق بالمكتبة (مرة واحدة)
-في GitHub → Settings → Secrets and variables → Actions → **Variables** أضف ثلاثة متغيرات (قيم عامة وليست أسرارًا):
+في GitHub → Settings → Secrets and variables → Actions أضف ثلاث قيم إما في **Variables** أو في **Repository secrets** (كلاهما يعمل؛ ليست أسرارًا فعلية لأن المفتاح anon عام):
 `SUPABASE_URL` و`SUPABASE_ANON_KEY` (المفتاح anon/publishable فقط) و`CLOUDINARY_CLOUD_NAME`. ثم أعد تشغيل Android CI.
 بدونها تعمل المحررات كلها، وتعرض المكتبة رسالة «غير مضبوط». شغّل `0007_public_library.sql` ليقرأ التطبيق الأصول المنشورة بلا حساب.
 
