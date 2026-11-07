@@ -49,7 +49,8 @@
   .msg.warn{color:var(--warn);border-color:var(--warn)}
   nav{position:fixed;inset:auto 0 0 0;display:flex;background:var(--surface);border-top:1px solid var(--line);
     padding-bottom:env(safe-area-inset-bottom,0)}
-  nav button{flex:1;border:0;border-radius:0;background:transparent;color:var(--muted);min-height:56px;padding:0 4px;font-size:.9rem}
+  nav{overflow-x:auto}
+  nav button{flex:1 0 auto;border:0;border-radius:0;background:transparent;color:var(--muted);min-height:56px;padding:0 4px;font-size:.9rem}
   nav button[aria-current=page]{color:var(--primary);box-shadow:inset 0 3px 0 var(--primary)}
   .log{font-size:.92rem;border-bottom:1px solid var(--line);padding:10px 0}
   .log:last-child{border-bottom:0} .log small{color:var(--muted);display:block}
@@ -80,6 +81,7 @@
   <button data-tab="dashboard">المعلومات</button>
   <button data-tab="assets">الأصول</button>
   <button data-tab="setup">الفئات</button>
+  <button data-tab="pay">المدفوعات</button>
   <button data-tab="ads">الإعلانات</button>
   <button data-tab="audit">السجل</button>
 </nav>
@@ -88,5 +90,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="admin.js"></script>
 <script src="slicer.js"></script>
+<script src="payments.js"></script>
 </body>
 </html>

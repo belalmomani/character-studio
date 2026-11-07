@@ -5,7 +5,7 @@ import os, re
 here = os.path.dirname(os.path.abspath(__file__))
 read = lambda n: open(os.path.join(here, n), encoding="utf-8").read()
 html = read("index.html")
-for name in ["config.js", "slice-core.js", "admin.js", "slicer.js"]:
+for name in ["config.js", "slice-core.js", "admin.js", "slicer.js", "payments.js"]:
     js = read(name)
     assert "</script" not in js.lower(), name + " contains </script"
     tag = '<script src="%s"></script>' % name

@@ -76,8 +76,11 @@ jobs:
           node-version: "20"
       - name: Slice-core unit tests
         run: node admin-web/tests/slice-core.test.js
+      - name: Payments helper tests
+        run: node admin-web/tests/payments-helpers.test.js
       - name: Syntax check admin scripts
         run: |
           node --check admin-web/admin.js
           node --check admin-web/slicer.js
           node --check admin-web/slice-core.js
+          node --check admin-web/payments.js

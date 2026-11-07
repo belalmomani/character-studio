@@ -66,6 +66,10 @@ const ERRORS = {
   invalid_anchors: "نقاط التثبيت غير صالحة (يجب أن تقع داخل أبعاد الصورة).",
   assets_check: "تحقق من التسعير: الأصل المجاني تكلفته 0، والمدفوع تكلفته أكبر من 0.",
   duplicate: "القيمة موجودة من قبل.",
+  no_pending_submission: "لا يوجد إشعار تحويل بانتظار المراجعة لهذا الطلب.",
+  reason_required: "سبب الرفض مطلوب.",
+  bank_transfer_settings_check: "لا يمكن تفعيل التحويل البنكي إلا ببيانات كاملة وIBAN صحيح.",
+  order_not_payable: "حالة الطلب لا تسمح بالتفعيل.",
 };
 function explain(err) {
   const t = (err && (err.message || err.details)) || "";
@@ -186,7 +190,7 @@ function render() {
   nav.querySelectorAll("[data-tab]").forEach(b => {
     if (b.dataset.tab === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   });
-  ({ dashboard: dashboardView, assets: assetsView, setup: setupView, ads: adsView, audit: auditView })[tab]();
+  ({ dashboard: dashboardView, assets: assetsView, setup: setupView, pay: paymentsView, ads: adsView, audit: auditView })[tab]();
 }
 
 // ---------- لوحة المعلومات ----------
