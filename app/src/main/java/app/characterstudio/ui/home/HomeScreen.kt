@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import app.characterstudio.R
 
 @Composable
-fun HomeScreen(onProjects: () -> Unit, onNewCharacter: () -> Unit, onLibrary: () -> Unit, onAccount: () -> Unit, onSettings: () -> Unit) {
+fun HomeScreen(onProjects: () -> Unit, onNewCharacter: () -> Unit, onLibrary: () -> Unit, onAccount: () -> Unit, onBilling: () -> Unit, onSettings: () -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(Modifier.safeDrawingPadding().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Spacer(Modifier.height(24.dp))
@@ -30,6 +30,7 @@ fun HomeScreen(onProjects: () -> Unit, onNewCharacter: () -> Unit, onLibrary: ()
             HomeCard(R.string.home_my_projects, R.string.home_my_projects_desc, onProjects)
             HomeCard(R.string.home_library, R.string.home_library_desc, onLibrary)
             HomeCard(R.string.home_account, R.string.home_account_desc, onAccount)
+            HomeCard(R.string.home_billing, R.string.home_billing_desc, onBilling)
             androidx.compose.material3.OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.home_settings))
             }

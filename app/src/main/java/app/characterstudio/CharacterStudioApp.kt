@@ -3,6 +3,8 @@ package app.characterstudio
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
+import app.characterstudio.billing.BillingRepository
+import app.characterstudio.billing.SupabaseBillingApi
 import app.characterstudio.auth.AccountRepository
 import app.characterstudio.auth.AuthRepository
 import app.characterstudio.auth.SecureSessionStore
@@ -87,6 +89,10 @@ class AppContainer(context: Context) {
             appVersion = BuildConfig.VERSION_CODE,
         )
     }
+
+    val billing: BillingRepository = BillingRepository(
+        authRepo, if (supabaseConfigured) SupabaseBillingApi(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) else null,
+    )
 
     val syncService: ProjectSyncService = ProjectSyncService(
         authRepo, context.applicationContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE),

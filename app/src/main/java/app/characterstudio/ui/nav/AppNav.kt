@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import app.characterstudio.editor.ui.EditorScreen
 import app.characterstudio.export.ExportScreen
 import app.characterstudio.ui.home.HomeScreen
+import app.characterstudio.ui.billing.BillingScreen
+import app.characterstudio.ui.billing.BillingViewModel
 import app.characterstudio.ui.account.AccountScreen
 import app.characterstudio.ui.account.AccountViewModel
 import app.characterstudio.ui.info.InfoScreen
@@ -26,6 +28,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val LIBRARY = "library"
     const val ACCOUNT = "account"
+    const val BILLING = "billing"
     const val INFO = "info/{kind}"
     fun info(kind: String) = "info/$kind"
     const val EDITOR = "editor/{projectId}"
@@ -45,6 +48,7 @@ fun AppNav() {
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onLibrary = { nav.navigate(Routes.LIBRARY) },
                 onAccount = { nav.navigate(Routes.ACCOUNT) },
+                onBilling = { nav.navigate(Routes.BILLING) },
             )
         }
         composable(Routes.PROJECTS) {
@@ -78,6 +82,10 @@ fun AppNav() {
         composable(Routes.LIBRARY) {
             val libVm: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory)
             AssetLibraryContent(vm = libVm, onClose = { nav.popBackStack() }, onPick = null)
+        }
+        composable(Routes.BILLING) {
+            val billingVm: BillingViewModel = viewModel(factory = BillingViewModel.Factory)
+            BillingScreen(vm = billingVm, onBack = { nav.popBackStack() }, onAccount = { nav.navigate(Routes.ACCOUNT) })
         }
         composable(Routes.ACCOUNT) {
             val accountVm: AccountViewModel = viewModel(factory = AccountViewModel.Factory)
