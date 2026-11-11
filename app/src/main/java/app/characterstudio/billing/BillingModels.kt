@@ -90,12 +90,19 @@ object BillingParsing {
         )
     }
 
-    private fun order(o: JsonObject): Order? = Order(
-        id = o["id"].str() ?: return null, reference = o["reference"].str().orEmpty(), productType = o["product_type"].str() ?: return null,
-        name = ((o["snapshot"] as? JsonObject)?.get("name")).str().orEmpty(), amountCents = o["amount_cents"].int() ?: return null,
-        currency = o["currency"].str() ?: return null, method = o["method"].str() ?: return null, status = o["status"].str() ?: return null,
-        createdAt = o["created_at"].str().orEmpty(), expiresAt = o["expires_at"].str().orEmpty(),
-    )
+    private fun order(o: JsonObject): Order? {
+        val id = o["id"].str() ?: return null
+        val productType = o["product_type"].str() ?: return null
+        val amount = o["amount_cents"].int() ?: return null
+        val currency = o["currency"].str() ?: return null
+        val method = o["method"].str() ?: return null
+        val status = o["status"].str() ?: return null
+        return Order(
+            id = id, reference = o["reference"].str().orEmpty(), productType = productType,
+            name = ((o["snapshot"] as? JsonObject)?.get("name")).str().orEmpty(), amountCents = amount, currency = currency,
+            method = method, status = status, createdAt = o["created_at"].str().orEmpty(), expiresAt = o["expires_at"].str().orEmpty(),
+        )
+    }
 
     fun orders(body: String): List<Order> = rows(body).mapNotNull { order(it) }
     fun singleOrder(body: String): Order? = runCatching { order(json.parseToJsonElement(body).jsonObject) }.getOrNull()
@@ -110,13 +117,16 @@ object BillingParsing {
         SubscriptionInfo(o["status"].str() ?: "none", o["ends_at"].str())
     }.getOrDefault(SubscriptionInfo("none", null))
 
-    fun bankDetails(body: String): BankDetails? = runCatching {
-        val o = json.parseToJsonElement(body).jsonObject
-        BankDetails(
-            beneficiary = o["beneficiary"].str().orEmpty(), bank = o["bank"].str().orEmpty(), iban = o["iban"].str() ?: return null,
-            instructions = o["instructions"].str().orEmpty(), amountCents = o["amount_cents"].int() ?: return null,
-            currency = o["currency"].str() ?: return null, reference = o["reference"].str() ?: return null,
+    fun bankDetails(body: String): BankDetails? {
+        val o = runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull() ?: return null
+        val iban = o["iban"].str() ?: return null
+        val amount = o["amount_cents"].int() ?: return null
+        val currency = o["currency"].str() ?: return null
+        val reference = o["reference"].str() ?: return null
+        return BankDetails(
+            beneficiary = o["beneficiary"].str().orEmpty(), bank = o["bank"].str().orEmpty(), iban = iban,
+            instructions = o["instructions"].str().orEmpty(), amountCents = amount, currency = currency, reference = reference,
             status = o["status"].str().orEmpty(), expiresAt = o["expires_at"].str().orEmpty(),
         )
-    }.getOrNull()
+    }
 }
